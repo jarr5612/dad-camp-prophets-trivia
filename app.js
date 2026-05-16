@@ -540,11 +540,22 @@ function shuffle(items) {
 }
 
 async function startMusic() {
-  audioContext ||= new AudioContext();
-  if (audioContext.state === "suspended") await audioContext.resume();
-  musicOn = true;
-  musicButton.textContent = "Music On";
-  playMusicPattern();
+  const AudioEngine = window.AudioContext || window.webkitAudioContext;
+  if (!AudioEngine) {
+    musicButton.textContent = "Music Unavailable";
+    return;
+  }
+
+  try {
+    audioContext ||= new AudioEngine();
+    if (audioContext.state === "suspended") await audioContext.resume();
+    musicOn = true;
+    musicButton.textContent = "Music On";
+    playMusicPattern();
+  } catch (error) {
+    musicOn = false;
+    musicButton.textContent = "Tap Again";
+  }
 }
 
 function stopMusic() {

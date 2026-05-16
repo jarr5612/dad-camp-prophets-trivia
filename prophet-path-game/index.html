@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prophet Path Camp Game</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section id="setupView" class="setup-view">
+        <div class="hero">
+          <p class="eyebrow">Church Day Camp Activity</p>
+          <h1>Prophet Path</h1>
+          <p>A horizontal camp trail trivia game built from the provided prophet questions.</p>
+        </div>
+
+        <form id="setupForm" class="setup-panel">
+          <label>
+            Teams
+            <select id="teamCount" name="teamCount">
+              <option value="2">2 teams</option>
+              <option value="3">3 teams</option>
+              <option value="4">4 teams</option>
+            </select>
+          </label>
+
+          <fieldset>
+            <legend>Play Style</legend>
+            <label class="choice-row">
+              <input type="radio" name="mode" value="host" checked />
+              <span>Game master scores each team</span>
+            </label>
+            <label class="choice-row">
+              <input type="radio" name="mode" value="teams" />
+              <span>Teams select A, B, C, or D</span>
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Question Order</legend>
+            <label class="choice-row">
+              <input type="radio" name="order" value="standard" checked />
+              <span>PDF order</span>
+            </label>
+            <label class="choice-row">
+              <input type="radio" name="order" value="shuffle" />
+              <span>Shuffle</span>
+            </label>
+          </fieldset>
+
+          <button class="primary" type="submit">Start Trail</button>
+        </form>
+      </section>
+
+      <section id="gameView" class="game-view hidden">
+        <header class="hud">
+          <div>
+            <p id="stopLabel" class="eyebrow">Stop 1 of 40</p>
+            <h2>Prophet Path</h2>
+          </div>
+          <div id="scoreboard" class="scoreboard"></div>
+          <button id="newGameButton" class="ghost" type="button">New Game</button>
+        </header>
+
+        <section class="trail-frame">
+          <div id="trail" class="trail"></div>
+          <article class="question-card">
+            <div class="question-topline">
+              <span id="partLabel">Ancient Prophets</span>
+              <span id="phaseLabel">Explore the scene</span>
+            </div>
+            <p id="questionText" class="question-text"></p>
+            <div id="choices" class="answers"></div>
+            <div id="teamPanel" class="team-panel"></div>
+          </article>
+        </section>
+
+        <footer class="controls">
+          <button id="backButton" class="secondary" type="button">Back</button>
+          <button id="askButton" class="primary" type="button">Ask Question</button>
+          <button id="revealButton" class="primary muted" type="button">Reveal Answer</button>
+          <button id="nextButton" class="secondary" type="button">Next Stop</button>
+        </footer>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

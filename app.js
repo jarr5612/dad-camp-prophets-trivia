@@ -550,7 +550,7 @@ async function startMusic() {
     audioContext ||= new AudioEngine();
     if (audioContext.state === "suspended") await audioContext.resume();
     musicOn = true;
-    musicButton.textContent = "Music Off";
+    musicButton.textContent = "Turn Music Off";
     playMusicPattern();
   } catch (error) {
     musicOn = false;
@@ -560,7 +560,7 @@ async function startMusic() {
 
 function stopMusic() {
   musicOn = false;
-  musicButton.textContent = "Music On";
+  musicButton.textContent = "Turn Music On";
   clearTimeout(musicTimer);
 }
 

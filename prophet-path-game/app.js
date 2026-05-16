@@ -23,6 +23,8 @@ const state = {
 const setupView = document.querySelector("#setupView");
 const gameView = document.querySelector("#gameView");
 const setupForm = document.querySelector("#setupForm");
+const loadStatus = document.querySelector("#loadStatus");
+const startButton = document.querySelector("#startButton");
 const trail = document.querySelector("#trail");
 const stopLabel = document.querySelector("#stopLabel");
 const partLabel = document.querySelector("#partLabel");
@@ -40,12 +42,23 @@ const newGameButton = document.querySelector("#newGameButton");
 init();
 
 async function init() {
-  state.questions = await loadQuestions();
-  buildTrail();
+  try {
+    state.questions = await loadQuestions();
+    if (state.questions.length !== 40) throw new Error("Expected 40 questions.");
+    buildTrail();
+    loadStatus.textContent = "Trail questions loaded.";
+    loadStatus.className = "load-status ready";
+    startButton.disabled = false;
+  } catch (error) {
+    loadStatus.textContent = "Questions did not load. Refresh the page and try again.";
+    loadStatus.className = "load-status error";
+    startButton.disabled = true;
+  }
 }
 
 setupForm.addEventListener("submit", (event) => {
   event.preventDefault();
+  if (!state.questions.length) return;
   const data = new FormData(setupForm);
   const teamCount = Number(data.get("teamCount"));
   state.mode = data.get("mode");

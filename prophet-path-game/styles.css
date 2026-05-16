@@ -141,6 +141,21 @@ fieldset {
   background: white;
 }
 
+.load-status {
+  min-height: 22px;
+  margin: -4px 0 0;
+  color: #5f6b78;
+  font-weight: 800;
+}
+
+.load-status.ready {
+  color: var(--green);
+}
+
+.load-status.error {
+  color: var(--red);
+}
+
 .primary,
 .secondary,
 .ghost,

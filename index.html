@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prophets Trivia Camp Game</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section id="setupView" class="setup-view">
+        <div class="brand-panel">
+          <p class="eyebrow">Church Day Camp Activity</p>
+          <h1>Prophets Trivia</h1>
+          <p class="lede">A team trivia game for 7-11 year old boys, built from the provided question PDF.</p>
+        </div>
+
+        <form id="setupForm" class="setup-card">
+          <div class="field-group">
+            <label for="teamCount">Teams</label>
+            <select id="teamCount" name="teamCount">
+              <option value="2">2 teams</option>
+              <option value="3">3 teams</option>
+              <option value="4">4 teams</option>
+            </select>
+          </div>
+
+          <fieldset class="field-group">
+            <legend>Play Style</legend>
+            <label class="radio-card">
+              <input type="radio" name="mode" value="host" checked />
+              <span>
+                <strong>Game Master</strong>
+                <small>Leader reads the question and awards points.</small>
+              </span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="mode" value="teams" />
+              <span>
+                <strong>Team Entry</strong>
+                <small>Each team picks A, B, C, or D on the shared screen.</small>
+              </span>
+            </label>
+          </fieldset>
+
+          <fieldset class="field-group">
+            <legend>Question Order</legend>
+            <label class="radio-card compact">
+              <input type="radio" name="order" value="standard" checked />
+              <span><strong>PDF Order</strong></span>
+            </label>
+            <label class="radio-card compact">
+              <input type="radio" name="order" value="shuffle" />
+              <span><strong>Shuffle</strong></span>
+            </label>
+          </fieldset>
+
+          <button class="primary-button" type="submit">Start Game</button>
+        </form>
+      </section>
+
+      <section id="gameView" class="game-view hidden" aria-live="polite">
+        <header class="topbar">
+          <div>
+            <p id="roundLabel" class="eyebrow">Question 1 of 40</p>
+            <h2 id="gameTitle">Prophets Trivia</h2>
+          </div>
+          <div class="topbar-actions">
+            <button id="resetButton" class="ghost-button" type="button">New Game</button>
+          </div>
+        </header>
+
+        <aside id="scoreboard" class="scoreboard"></aside>
+
+        <section class="question-stage">
+          <div class="question-header">
+            <span id="partLabel" class="part-pill">Ancient Prophets</span>
+          </div>
+          <p id="questionText" class="question-text"></p>
+          <div id="choices" class="choices"></div>
+        </section>
+
+        <section id="teamEntryPanel" class="team-entry-panel hidden"></section>
+        <section id="hostPanel" class="host-panel"></section>
+
+        <footer class="controls">
+          <button id="prevButton" class="secondary-button" type="button">Back</button>
+          <button id="revealButton" class="primary-button" type="button">Reveal Answer</button>
+          <button id="nextButton" class="secondary-button" type="button">Next</button>
+        </footer>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

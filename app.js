@@ -311,6 +311,11 @@ const revealButton = document.querySelector("#revealButton");
 const nextButton = document.querySelector("#nextButton");
 const prevButton = document.querySelector("#prevButton");
 const resetButton = document.querySelector("#resetButton");
+const musicButton = document.querySelector("#musicButton");
+
+let audioContext;
+let musicTimer;
+let musicOn = false;
 
 setupForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -364,8 +369,17 @@ prevButton.addEventListener("click", () => {
 });
 
 resetButton.addEventListener("click", () => {
+  stopMusic();
   gameView.classList.add("hidden");
   setupView.classList.remove("hidden");
+});
+
+musicButton.addEventListener("click", async () => {
+  if (musicOn) {
+    stopMusic();
+  } else {
+    await startMusic();
+  }
 });
 
 function render() {
@@ -523,4 +537,45 @@ function shuffle(items) {
     const swapIndex = Math.floor(Math.random() * (index + 1));
     [items[index], items[swapIndex]] = [items[swapIndex], items[index]];
   }
+}
+
+async function startMusic() {
+  audioContext ||= new AudioContext();
+  if (audioContext.state === "suspended") await audioContext.resume();
+  musicOn = true;
+  musicButton.textContent = "Music On";
+  playMusicPattern();
+}
+
+function stopMusic() {
+  musicOn = false;
+  musicButton.textContent = "Music Off";
+  clearTimeout(musicTimer);
+}
+
+function playMusicPattern() {
+  if (!musicOn) return;
+  const now = audioContext.currentTime;
+  const notes = [392, 494, 587, 494, 440, 523, 659, 523];
+  notes.forEach((frequency, index) => {
+    playTone(frequency, now + index * 0.22, 0.13, index % 2 ? 0.035 : 0.05);
+  });
+  [196, 247, 220, 262].forEach((frequency, index) => {
+    playTone(frequency, now + index * 0.44, 0.18, 0.035, "triangle");
+  });
+  musicTimer = setTimeout(playMusicPattern, 1760);
+}
+
+function playTone(frequency, start, duration, volume, type = "sine") {
+  const oscillator = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, start);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  oscillator.connect(gain);
+  gain.connect(audioContext.destination);
+  oscillator.start(start);
+  oscillator.stop(start + duration + 0.02);
 }

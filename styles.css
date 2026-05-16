@@ -208,6 +208,13 @@ select {
   border-radius: 8px;
 }
 
+.topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 .topbar h2 {
   font-size: clamp(1.6rem, 4vw, 2.5rem);
 }
@@ -443,6 +450,14 @@ select {
 
   .topbar {
     display: grid;
+  }
+
+  .topbar-actions {
+    justify-content: stretch;
+  }
+
+  .topbar-actions button {
+    flex: 1 1 140px;
   }
 
   .choices,

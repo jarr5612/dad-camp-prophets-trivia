@@ -109,7 +109,12 @@ newGameButton.addEventListener("click", () => {
 });
 
 async function loadQuestions() {
+  if (Array.isArray(window.PROPHET_PATH_QUESTIONS)) {
+    return window.PROPHET_PATH_QUESTIONS;
+  }
+
   const response = await fetch("../app.js?v=music4");
+  if (!response.ok) throw new Error("Question file could not be fetched.");
   const source = await response.text();
   const match = source.match(/const QUESTIONS = (\[[\s\S]*?\n\]);/);
   if (!match) throw new Error("Question data could not be loaded.");

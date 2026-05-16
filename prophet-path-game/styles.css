@@ -1,11 +1,11 @@
 :root {
-  --navy: #163c6b;
+  --navy: #173a58;
   --deep: #10283f;
-  --lake: #2f7891;
-  --pine: #2e694e;
-  --grass: #77a95d;
-  --gold: #f4b83f;
-  --paper: #fffaf0;
+  --lake: #397b94;
+  --pine: #355f4d;
+  --grass: #6f8f59;
+  --gold: #d99f3f;
+  --paper: #fbf6ea;
   --ink: #162033;
   --line: #d8e2dc;
   --red: #b64a3d;
@@ -21,7 +21,7 @@ body {
   min-height: 100vh;
   color: var(--ink);
   font-family: Avenir, "Avenir Next", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: linear-gradient(135deg, #244f80, #35705e);
+  background: linear-gradient(135deg, #213f5c, #365f56);
 }
 
 button,
@@ -193,7 +193,7 @@ fieldset {
 .game-view {
   min-height: calc(100vh - 36px);
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto minmax(430px, 1fr) auto auto;
   gap: 12px;
 }
 
@@ -252,12 +252,13 @@ fieldset {
   min-height: 0;
   overflow: hidden;
   border-radius: 8px;
-  background: linear-gradient(#8ed2ed 0 48%, #77a95d 48%);
+  background: #739971;
+  box-shadow: 0 18px 42px rgba(9, 25, 42, 0.2);
 }
 
 .trail {
   height: 100%;
-  min-height: 650px;
+  min-height: 500px;
   display: flex;
   transition: transform 700ms ease;
 }
@@ -276,13 +277,9 @@ fieldset {
 }
 
 .question-card {
-  position: absolute;
-  left: 3.2%;
-  right: 3.2%;
-  bottom: 18px;
-  min-height: 210px;
-  padding: 18px;
-  background: rgba(255, 250, 240, 0.96);
+  min-height: 245px;
+  padding: 18px 22px;
+  background: rgba(251, 246, 234, 0.98);
   border: 2px solid rgba(255,255,255,0.72);
 }
 
@@ -311,14 +308,14 @@ fieldset {
 
 .question-text {
   margin: 0 0 14px;
-  font-size: clamp(1.35rem, 2.5vw, 2.25rem);
-  line-height: 1.13;
+  font-size: clamp(1.25rem, 2vw, 1.9rem);
+  line-height: 1.18;
   font-weight: 900;
 }
 
 .answers {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -423,6 +420,10 @@ fieldset {
   .setup-view,
   .hud {
     grid-template-columns: 1fr;
+  }
+
+  .game-view {
+    grid-template-rows: auto minmax(380px, 1fr) auto auto;
   }
 
   .answers,

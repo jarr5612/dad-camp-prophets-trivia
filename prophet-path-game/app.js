@@ -260,35 +260,54 @@ function shuffle(items) {
 }
 
 function drawScene(type, index) {
-  const sky = index < 23 ? "#8fd3ee" : "#9bd4f0";
-  const hill = index < 23 ? "#78a95f" : "#6ba675";
+  const sky = index < 23 ? "#8fb9c8" : "#98bdcb";
+  const hill = index < 23 ? "#6f8f59" : "#6c8f66";
   const feature = drawFeature(type);
   return `
     <svg class="scene-svg" viewBox="0 0 1600 900" role="img" aria-label="Visual clue scene">
-      <rect width="1600" height="900" fill="${sky}"/>
-      <circle cx="1320" cy="115" r="54" fill="#ffd36a"/>
-      <path d="M0 370 C280 260 510 360 760 260 C1000 165 1240 310 1600 210 L1600 900 L0 900 Z" fill="#4f7d66"/>
-      <path d="M0 520 C270 440 470 540 730 455 C1020 360 1250 520 1600 420 L1600 900 L0 900 Z" fill="${hill}"/>
-      <path d="M-80 900 C320 730 520 700 830 760 C1120 815 1320 680 1680 590" fill="none" stroke="#c48c50" stroke-width="92" stroke-linecap="round"/>
-      <path d="M-80 900 C320 730 520 700 830 760 C1120 815 1320 680 1680 590" fill="none" stroke="#e0b56e" stroke-width="58" stroke-linecap="round"/>
+      <defs>
+        <linearGradient id="sky${index}" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stop-color="${sky}"/>
+          <stop offset="1" stop-color="#d7c9a7"/>
+        </linearGradient>
+        <filter id="soft${index}">
+          <feGaussianBlur stdDeviation="1.2"/>
+        </filter>
+      </defs>
+      <rect width="1600" height="900" fill="url(#sky${index})"/>
+      <circle cx="1305" cy="132" r="58" fill="#d9b55c" opacity="0.9"/>
+      <path d="M0 330 C250 220 520 340 760 235 C1010 125 1240 290 1600 190 L1600 900 L0 900 Z" fill="#496f61"/>
+      <path d="M0 495 C270 415 470 515 730 430 C1020 335 1250 495 1600 395 L1600 900 L0 900 Z" fill="${hill}"/>
+      <path d="M-80 900 C320 730 520 700 830 760 C1120 815 1320 680 1680 590" fill="none" stroke="#a97643" stroke-width="92" stroke-linecap="round"/>
+      <path d="M-80 900 C320 730 520 700 830 760 C1120 815 1320 680 1680 590" fill="none" stroke="#d0a060" stroke-width="58" stroke-linecap="round"/>
+      <g opacity="0.72" filter="url(#soft${index})">${drawTrees(index)}</g>
       ${drawCampExtras(index)}
       ${feature}
     </svg>`;
+}
+
+function drawTrees(index) {
+  return Array.from({ length: 18 }, (_, i) => {
+    const x = 45 + i * 88 + (index % 3) * 12;
+    const y = 428 + (i % 4) * 18;
+    const h = 100 + (i % 5) * 18;
+    return `<g transform="translate(${x} ${y})"><rect x="-8" y="${h - 18}" width="16" height="58" fill="#5c442e"/><path d="M0 0 L-${38 + i % 3 * 6} ${h} H${38 + i % 3 * 6} Z" fill="#2f5848"/></g>`;
+  }).join("");
 }
 
 function drawCampExtras(index) {
   const tentX = 1180 + (index % 3) * 80;
   return `
     <g opacity="0.95">
-      <path d="M${tentX} 670 L${tentX + 92} 520 L${tentX + 184} 670 Z" fill="#f8efe0" stroke="#9b6a35" stroke-width="8"/>
-      <path d="M${tentX + 92} 520 L${tentX + 92} 670" stroke="#9b6a35" stroke-width="7"/>
-      <rect x="${tentX - 18}" y="676" width="220" height="14" rx="7" fill="#674322"/>
+      <path d="M${tentX} 670 L${tentX + 92} 520 L${tentX + 184} 670 Z" fill="#dfd3bd" stroke="#8a673f" stroke-width="8"/>
+      <path d="M${tentX + 92} 520 L${tentX + 92} 670" stroke="#8a673f" stroke-width="7"/>
+      <rect x="${tentX - 18}" y="676" width="220" height="14" rx="7" fill="#5e4228"/>
     </g>
     <g transform="translate(96 610)">
-      <rect x="0" y="55" width="150" height="38" rx="18" fill="#7a4b26"/>
-      <circle cx="42" cy="46" r="16" fill="#ffca5e"/>
-      <circle cx="82" cy="38" r="20" fill="#ffb33f"/>
-      <circle cx="116" cy="48" r="15" fill="#ffd36a"/>
+      <rect x="0" y="55" width="150" height="38" rx="18" fill="#684427"/>
+      <circle cx="42" cy="46" r="16" fill="#d99f3f"/>
+      <circle cx="82" cy="38" r="20" fill="#c97734"/>
+      <circle cx="116" cy="48" r="15" fill="#e5b75f"/>
     </g>`;
 }
 

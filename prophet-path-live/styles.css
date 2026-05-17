@@ -145,7 +145,7 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 
 .hud {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   gap: 16px;
   align-items: center;
   padding: 16px 18px;
@@ -198,8 +198,9 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 .team-row small { color: #5f6b78; font-weight: 800; }
 
 .question-panel {
+  position: relative;
   min-height: 230px;
-  padding: 18px;
+  padding: 18px 170px 18px 18px;
   background: var(--paper);
 }
 
@@ -214,7 +215,46 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
   background: var(--navy);
   font-weight: 900;
 }
-#hostPhaseLabel, #timerLabel { color: #392600; background: #ffe2a0; }
+#hostPhaseLabel, #timerPill { color: #392600; background: #ffe2a0; }
+
+.timer-card {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 128px;
+  min-height: 128px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border: 5px solid #f3c456;
+  border-radius: 50%;
+  color: #392600;
+  background: radial-gradient(circle at 35% 30%, #fff4c7, #f0b83f 68%, #bd7d24);
+  box-shadow: 0 14px 30px rgba(57, 38, 0, 0.18);
+}
+
+.timer-card span {
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.timer-card strong {
+  font-size: 4rem;
+  line-height: 0.95;
+}
+
+.timer-card.warning {
+  color: white;
+  border-color: #ff8f70;
+  background: radial-gradient(circle at 35% 30%, #ffdbcd, #d65a3d 65%, #8f2e22);
+  animation: timerPulse 0.7s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
 
 #hostQuestionText {
   margin: 0 0 14px;
@@ -304,4 +344,11 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 @media (max-width: 900px) {
   .config-view, .lobby-view, .host-grid, .hud { grid-template-columns: 1fr; }
   .answers { grid-template-columns: 1fr 1fr; }
+  .question-panel { padding-right: 18px; }
+  .timer-card {
+    position: static;
+    width: 112px;
+    min-height: 112px;
+    margin-bottom: 14px;
+  }
 }

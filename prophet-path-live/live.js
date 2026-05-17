@@ -25,7 +25,11 @@ const state = {
   game: null,
   localAnsweredKey: null,
   hostTimer: null,
-  autoRevealing: false
+  autoRevealing: false,
+  musicContext: null,
+  musicTimer: null,
+  musicPlaying: false,
+  musicStep: 0
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -68,6 +72,7 @@ $("#askQuestionButton").addEventListener("click", askQuestion);
 $("#revealAnswerButton").addEventListener("click", revealAnswer);
 $("#nextQuestionButton").addEventListener("click", nextQuestion);
 $("#endGameButton").addEventListener("click", endGame);
+$("#musicButton").addEventListener("click", toggleMusic);
 
 startWithEmbeddedConfig();
 
@@ -138,6 +143,7 @@ async function testDatabaseConnection() {
 
 async function createGame() {
   try {
+    startMusic();
     setLobbyStatus("Creating game...");
     const code = makeCode();
     const teamCount = Number($("#teamCount").value);
@@ -217,6 +223,7 @@ function listenToGame(code, role) {
 }
 
 async function askQuestion() {
+  startMusic();
   const startedAt = Date.now();
   await update(gameRef(state.gameCode), {
     phase: "question",
@@ -257,6 +264,7 @@ async function nextQuestion() {
 
 async function endGame() {
   if (confirm("End this live game?")) {
+    stopMusic();
     await remove(gameRef(state.gameCode));
     showView(lobbyView);
   }
@@ -329,6 +337,8 @@ function updateHostTimer() {
   if (!game) return;
   const remaining = getRemainingSeconds(game);
   $("#timerLabel").textContent = String(remaining);
+  $("#timerPill").textContent = game.phase === "question" ? `${remaining} seconds` : `${QUESTION_SECONDS} seconds`;
+  $("#timerCard").classList.toggle("warning", game.phase === "question" && remaining <= 5);
   if (game.phase === "question" && remaining <= 0 && !state.autoRevealing) revealAnswer();
 }
 
@@ -365,6 +375,74 @@ function getRemainingSeconds(game) {
   if (game.phase !== "question") return QUESTION_SECONDS;
   const endsAt = game.questionEndsAt || ((game.questionStartedAt || Date.now()) + QUESTION_SECONDS * 1000);
   return Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+}
+
+function toggleMusic() {
+  if (state.musicPlaying) {
+    stopMusic();
+  } else {
+    startMusic();
+  }
+}
+
+function startMusic() {
+  if (state.musicPlaying) return;
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) return;
+  state.musicContext = state.musicContext || new AudioContext();
+  state.musicContext.resume();
+  state.musicPlaying = true;
+  $("#musicButton").textContent = "Music Off";
+  playMusicStep();
+  state.musicTimer = setInterval(playMusicStep, 285);
+}
+
+function stopMusic() {
+  if (state.musicTimer) clearInterval(state.musicTimer);
+  state.musicTimer = null;
+  state.musicPlaying = false;
+  $("#musicButton").textContent = "Music On";
+}
+
+function playMusicStep() {
+  const context = state.musicContext;
+  if (!context) return;
+  const step = state.musicStep % 16;
+  const bassNotes = [130.81, 130.81, 196.00, 196.00, 174.61, 174.61, 146.83, 146.83];
+  const chordNotes = [261.63, 329.63, 392.00, 523.25];
+  const now = context.currentTime;
+
+  if (step % 2 === 0) playTone(bassNotes[Math.floor(step / 2)], now, 0.16, "triangle", 0.055);
+  if ([0, 4, 8, 12].includes(step)) playTone(chordNotes[(step / 4) % chordNotes.length], now + 0.03, 0.18, "sine", 0.035);
+  playPercussion(now, step % 4 === 0 ? 0.075 : 0.035);
+  state.musicStep += 1;
+}
+
+function playTone(frequency, start, duration, type, volume) {
+  const context = state.musicContext;
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, start);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  oscillator.connect(gain).connect(context.destination);
+  oscillator.start(start);
+  oscillator.stop(start + duration + 0.03);
+}
+
+function playPercussion(start, volume) {
+  const context = state.musicContext;
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = "square";
+  oscillator.frequency.setValueAtTime(920, start);
+  gain.gain.setValueAtTime(volume, start);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.035);
+  oscillator.connect(gain).connect(context.destination);
+  oscillator.start(start);
+  oscillator.stop(start + 0.04);
 }
 
 function gameRef(code) {

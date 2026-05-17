@@ -29,7 +29,8 @@ const state = {
   musicContext: null,
   musicTimer: null,
   musicPlaying: false,
-  musicStep: 0
+  musicStep: 0,
+  musicMaster: null
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -390,11 +391,13 @@ function startMusic() {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   if (!AudioContext) return;
   state.musicContext = state.musicContext || new AudioContext();
+  state.musicMaster = state.musicMaster || createMusicMaster();
   state.musicContext.resume();
   state.musicPlaying = true;
   $("#musicButton").textContent = "Music Off";
+  state.musicStep = 0;
   playMusicStep();
-  state.musicTimer = setInterval(playMusicStep, 285);
+  state.musicTimer = setInterval(playMusicStep, 300);
 }
 
 function stopMusic() {
@@ -408,13 +411,23 @@ function playMusicStep() {
   const context = state.musicContext;
   if (!context) return;
   const step = state.musicStep % 16;
-  const bassNotes = [130.81, 130.81, 196.00, 196.00, 174.61, 174.61, 146.83, 146.83];
-  const chordNotes = [261.63, 329.63, 392.00, 523.25];
+  const bar = Math.floor(state.musicStep / 16) % 4;
+  const bassRoots = [130.81, 174.61, 146.83, 196.00];
+  const chordProgression = [
+    [261.63, 329.63, 392.00],
+    [293.66, 349.23, 440.00],
+    [246.94, 293.66, 392.00],
+    [293.66, 392.00, 493.88]
+  ];
+  const melody = [523.25, 587.33, 659.25, 587.33, 523.25, 440.00, 493.88, 523.25];
   const now = context.currentTime;
 
-  if (step % 2 === 0) playTone(bassNotes[Math.floor(step / 2)], now, 0.16, "triangle", 0.055);
-  if ([0, 4, 8, 12].includes(step)) playTone(chordNotes[(step / 4) % chordNotes.length], now + 0.03, 0.18, "sine", 0.035);
-  playPercussion(now, step % 4 === 0 ? 0.075 : 0.035);
+  if (step % 4 === 0) playTone(bassRoots[bar], now, 0.34, "triangle", 0.16);
+  if (step % 8 === 0) playChord(chordProgression[bar], now + 0.02, 0.72);
+  if ([3, 7, 11, 15].includes(step)) playTone(melody[(state.musicStep / 2) % melody.length | 0], now, 0.12, "sine", 0.055);
+  if (step % 4 === 0) playSoftKick(now);
+  if (step % 4 === 2) playTick(now, 0.045);
+  if (step % 2 === 1) playTick(now, 0.018);
   state.musicStep += 1;
 }
 
@@ -425,24 +438,53 @@ function playTone(frequency, start, duration, type, volume) {
   oscillator.type = type;
   oscillator.frequency.setValueAtTime(frequency, start);
   gain.gain.setValueAtTime(0.0001, start);
-  gain.gain.exponentialRampToValueAtTime(volume, start + 0.02);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.035);
   gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-  oscillator.connect(gain).connect(context.destination);
+  oscillator.connect(gain).connect(state.musicMaster);
   oscillator.start(start);
-  oscillator.stop(start + duration + 0.03);
+  oscillator.stop(start + duration + 0.05);
 }
 
-function playPercussion(start, volume) {
+function playChord(notes, start, duration) {
+  notes.forEach((frequency, index) => playTone(frequency, start + index * 0.015, duration, "sine", 0.038));
+}
+
+function playSoftKick(start) {
   const context = state.musicContext;
   const oscillator = context.createOscillator();
   const gain = context.createGain();
-  oscillator.type = "square";
-  oscillator.frequency.setValueAtTime(920, start);
-  gain.gain.setValueAtTime(volume, start);
-  gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.035);
-  oscillator.connect(gain).connect(context.destination);
+  oscillator.type = "sine";
+  oscillator.frequency.setValueAtTime(120, start);
+  oscillator.frequency.exponentialRampToValueAtTime(55, start + 0.12);
+  gain.gain.setValueAtTime(0.11, start);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.14);
+  oscillator.connect(gain).connect(state.musicMaster);
   oscillator.start(start);
-  oscillator.stop(start + 0.04);
+  oscillator.stop(start + 0.15);
+}
+
+function playTick(start, volume) {
+  const context = state.musicContext;
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = "triangle";
+  oscillator.frequency.setValueAtTime(1280, start);
+  gain.gain.setValueAtTime(volume, start);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.028);
+  oscillator.connect(gain).connect(state.musicMaster);
+  oscillator.start(start);
+  oscillator.stop(start + 0.032);
+}
+
+function createMusicMaster() {
+  const context = state.musicContext;
+  const filter = context.createBiquadFilter();
+  const gain = context.createGain();
+  filter.type = "lowpass";
+  filter.frequency.value = 2400;
+  gain.gain.value = 0.42;
+  filter.connect(gain).connect(context.destination);
+  return filter;
 }
 
 function gameRef(code) {

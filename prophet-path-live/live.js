@@ -23,7 +23,9 @@ const state = {
   teamId: null,
   teamName: null,
   game: null,
-  localAnsweredKey: null
+  localAnsweredKey: null,
+  hostTimer: null,
+  autoRevealing: false
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -204,6 +206,7 @@ function listenToGame(code, role) {
   onValue(gameRef(code), (snapshot) => {
     const game = snapshot.val();
     if (!game) {
+      stopHostTimer();
       showView(lobbyView);
       return;
     }
@@ -214,25 +217,31 @@ function listenToGame(code, role) {
 }
 
 async function askQuestion() {
+  const startedAt = Date.now();
   await update(gameRef(state.gameCode), {
     phase: "question",
-    questionStartedAt: Date.now(),
+    questionStartedAt: startedAt,
+    questionEndsAt: startedAt + QUESTION_SECONDS * 1000,
     submissions: {}
   });
 }
 
 async function revealAnswer() {
   const game = state.game;
+  if (!game || game.phase === "answer") return;
+  state.autoRevealing = true;
   const question = getQuestion(game);
   const updates = { phase: "answer" };
   Object.entries(game.teams || {}).forEach(([teamId, team]) => {
     const submission = game.submissions?.[teamId];
-    const correct = submission?.answer === question.answer;
+    const onTime = submission && submission.elapsedMs <= QUESTION_SECONDS * 1000;
+    const correct = onTime && submission.answer === question.answer;
     const points = correct ? calculatePoints(submission.elapsedMs) : 0;
     updates[`teams/${teamId}/score`] = (team.score || 0) + points;
-    updates[`teams/${teamId}/last`] = correct ? `+${points}` : submission ? "Wrong" : "No answer";
+    updates[`teams/${teamId}/last`] = correct ? `+${points}` : submission ? (onTime ? "Wrong" : "Too late") : "No answer";
   });
   await update(gameRef(state.gameCode), updates);
+  state.autoRevealing = false;
 }
 
 async function nextQuestion() {
@@ -241,6 +250,7 @@ async function nextQuestion() {
     current: next,
     phase: "scene",
     questionStartedAt: 0,
+    questionEndsAt: 0,
     submissions: {}
   });
 }
@@ -271,12 +281,13 @@ function renderHost() {
   const game = state.game;
   const question = getQuestion(game);
   const qIndex = game.order[game.current];
+  updateHostTimer();
+  syncHostTimerLoop();
   $("#hostRoundLabel").textContent = `Question ${(game.current || 0) + 1} of ${game.order.length}`;
   $("#hostPartLabel").textContent = question.part;
   $("#hostPhaseLabel").textContent = game.phase === "scene" ? "Scene" : game.phase === "question" ? "Answering" : "Answer revealed";
   $("#hostQuestionText").textContent = game.phase === "scene" ? "Teams look at the visual clue. Press Ask Question when ready." : question.question;
   $("#sceneArt").innerHTML = drawScene(SCENES[qIndex], qIndex);
-  $("#timerLabel").textContent = game.phase === "question" ? String(Math.max(0, QUESTION_SECONDS - Math.floor((Date.now() - game.questionStartedAt) / 1000))) : `${QUESTION_SECONDS}`;
   $("#askQuestionButton").disabled = game.phase !== "scene";
   $("#revealAnswerButton").disabled = game.phase !== "question";
   $("#nextQuestionButton").disabled = game.current >= game.order.length - 1;
@@ -298,6 +309,27 @@ function renderHostTeams(game) {
     const submission = game.submissions?.[teamId];
     return `<div class="team-row"><span>${team.deviceName || team.name}</span><strong>${team.score || 0}</strong><small>${submission ? "Answer in " + (submission.elapsedMs / 1000).toFixed(1) + "s" : team.last || "Waiting"}</small></div>`;
   }).join("");
+}
+
+function syncHostTimerLoop() {
+  if (state.game.phase === "question" && !state.hostTimer) {
+    state.hostTimer = setInterval(updateHostTimer, 250);
+  }
+  if (state.game.phase !== "question") stopHostTimer();
+}
+
+function stopHostTimer() {
+  if (!state.hostTimer) return;
+  clearInterval(state.hostTimer);
+  state.hostTimer = null;
+}
+
+function updateHostTimer() {
+  const game = state.game;
+  if (!game) return;
+  const remaining = getRemainingSeconds(game);
+  $("#timerLabel").textContent = String(remaining);
+  if (game.phase === "question" && remaining <= 0 && !state.autoRevealing) revealAnswer();
 }
 
 function renderTeam() {
@@ -327,6 +359,12 @@ function getQuestion(game) {
 function calculatePoints(elapsedMs) {
   const ratio = Math.max(0, 1 - elapsedMs / (QUESTION_SECONDS * 1000));
   return Math.max(100, Math.round(500 + ratio * 500));
+}
+
+function getRemainingSeconds(game) {
+  if (game.phase !== "question") return QUESTION_SECONDS;
+  const endsAt = game.questionEndsAt || ((game.questionStartedAt || Date.now()) + QUESTION_SECONDS * 1000);
+  return Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
 }
 
 function gameRef(code) {

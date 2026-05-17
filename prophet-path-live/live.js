@@ -346,7 +346,7 @@ function renderStopFocus(question, questionIndex, position, phase) {
   $("#timelineTrack").classList.toggle("dimmed", shouldShowFocus);
   $("#focusArt").innerHTML = drawScene(SCENES[questionIndex], questionIndex);
   $("#focusStopLabel").textContent = `Stop ${position + 1} of ${state.game.order.length}`;
-  $("#focusProphetName").textContent = phase === "answer" ? `Answer: ${answerText}` : `Symbol: ${BOARD_SYMBOLS[questionIndex] || "CLUE"}`;
+  $("#focusProphetName").textContent = phase === "answer" ? `Answer: ${answerText}` : "Visual Clue";
   $("#focusQuestionText").textContent = phase === "scene" ? "Look at the symbol and visual clue. Press Ask Question when teams are ready." : question.question;
 }
 
@@ -387,13 +387,59 @@ function renderTimeline(game) {
     const completed = game.completed?.[position];
     const status = `${completed ? "locked" : ""} ${position === current ? "active" : ""}`;
     const answerText = question.choices[question.answer];
-    const label = completed ? answerText : (BOARD_SYMBOLS[questionIndex] || "CLUE");
+    const symbol = BOARD_SYMBOLS[questionIndex] || "CLUE";
+    const clue = completed ? `<strong>${answerText}</strong>` : `<b class="symbol-icon" aria-hidden="true">${drawBoardIcon(symbol)}</b>`;
     return `<button class="timeline-stop ${status}" type="button" data-position="${position}" style="--x: ${point.x}%; --y: ${point.y}%;" aria-label="Open stop ${position + 1}">
       <span>${position + 1}</span>
-      <strong>${label}</strong>
+      ${clue}
     </button>`;
   }).join("");
   $("#timelineTrack").innerHTML = boardPath + boardStops;
+}
+
+function drawBoardIcon(symbol) {
+  const icons = {
+    ARK: `<path d="M12 30 H52 L46 42 H18 Z"/><path d="M22 20 H42 L48 30 H16 Z"/><path d="M30 13 H40 V21 H30 Z"/>`,
+    STARS: `<path d="M32 9 L36 24 L51 28 L38 36 L42 51 L32 42 L20 51 L25 36 L13 28 L28 24 Z"/>`,
+    COAT: `<path d="M22 13 L32 19 L42 13 L52 23 L45 31 V52 H19 V31 L12 23 Z"/><path d="M27 21 V52 M37 21 V52"/>`,
+    SEA: `<path d="M8 24 C18 16 25 32 35 24 C45 16 52 32 60 24"/><path d="M8 40 C18 32 25 48 35 40 C45 32 52 48 60 40"/>`,
+    CROWN: `<path d="M12 45 H52 L48 22 L38 35 L32 18 L26 35 L16 22 Z"/>`,
+    SLING: `<path d="M22 12 C18 28 26 38 32 48 C38 38 46 28 42 12"/><circle cx="32" cy="49" r="4"/>`,
+    FIRE: `<path d="M34 8 C47 21 38 31 49 42 C42 54 25 57 17 44 C10 31 25 24 23 12 C29 18 30 24 34 8 Z"/>`,
+    SCROLL: `<path d="M18 13 H47 C39 17 39 48 47 52 H18 C25 47 25 18 18 13 Z"/><path d="M25 24 H42 M25 34 H41 M25 43 H38"/>`,
+    CITY: `<path d="M12 52 V30 H20 V21 H30 V30 H38 V18 H50 V52 Z"/><path d="M16 52 H56"/>`,
+    BONES: `<path d="M15 22 L49 46"/><circle cx="12" cy="20" r="5"/><circle cx="20" cy="15" r="5"/><circle cx="45" cy="49" r="5"/><circle cx="53" cy="44" r="5"/>`,
+    LIONS: `<circle cx="32" cy="31" r="16"/><circle cx="32" cy="31" r="9"/><path d="M23 25 L17 18 M41 25 L47 18 M25 38 H39"/>`,
+    FISH: `<path d="M12 32 C24 18 42 18 54 32 C42 46 24 46 12 32 Z"/><path d="M54 32 L62 24 V40 Z"/><circle cx="25" cy="29" r="2"/>`,
+    RIVER: `<path d="M24 8 C10 22 44 26 26 40 C18 46 18 53 26 58"/><path d="M39 8 C25 22 58 26 41 40 C33 47 35 53 43 58"/>`,
+    GATE: `<path d="M16 54 V24 C16 15 48 15 48 24 V54"/><path d="M24 54 V31 C24 25 40 25 40 31 V54"/>`,
+    ROAD: `<path d="M24 56 L31 10 H39 L48 56 Z"/><path d="M36 16 V24 M37 32 V40 M39 48 V54"/>`,
+    TENT: `<path d="M10 52 L32 14 L54 52 Z"/><path d="M32 14 V52 M25 52 L32 36 L39 52"/>`,
+    SHIP: `<path d="M16 40 C28 48 42 48 54 40 L48 52 H22 Z"/><path d="M32 12 V40 M32 16 L48 34 H32 Z"/>`,
+    PRAYER: `<path d="M25 13 C30 21 30 37 23 51"/><path d="M39 13 C34 21 34 37 41 51"/><path d="M25 33 H39"/>`,
+    COURT: `<path d="M16 52 H48 M20 48 H44 M32 14 L50 24 H14 Z"/><path d="M20 24 V48 M32 24 V48 M44 24 V48"/>`,
+    ANGEL: `<circle cx="32" cy="17" r="6"/><path d="M22 30 C8 25 8 43 25 40"/><path d="M42 30 C56 25 56 43 39 40"/><path d="M32 24 V52"/>`,
+    SHIELD: `<path d="M32 10 L51 18 V32 C51 44 42 52 32 56 C22 52 13 44 13 32 V18 Z"/>`,
+    RECORD: `<path d="M18 12 H46 V54 H18 Z"/><path d="M25 23 H40 M25 32 H40 M25 41 H36"/>`,
+    PLATES: `<rect x="15" y="18" width="34" height="28" rx="3"/><path d="M21 24 H55 V52 H21 Z"/>`,
+    GROVE: `<path d="M20 52 V30 M44 52 V28"/><circle cx="20" cy="23" r="12"/><circle cx="44" cy="21" r="13"/>`,
+    WAGON: `<path d="M14 38 H50 L44 25 H20 Z"/><circle cx="22" cy="45" r="6"/><circle cx="44" cy="45" r="6"/>`,
+    JAIL: `<rect x="15" y="14" width="34" height="40"/><path d="M23 14 V54 M32 14 V54 M41 14 V54"/>`,
+    TEMPLE: `<path d="M12 52 H52 M18 48 V30 H46 V48 M25 48 V24 H39 V48 M32 11 V24"/><path d="M28 18 H36"/>`,
+    COIN: `<circle cx="32" cy="32" r="20"/><path d="M32 18 V46 M24 26 C24 20 40 20 40 27 C40 34 24 30 24 38 C24 45 40 45 40 38"/>`,
+    SPIRIT: `<path d="M32 8 C47 25 45 43 32 56 C19 43 17 25 32 8 Z"/><circle cx="32" cy="34" r="8"/>`,
+    BALL: `<circle cx="32" cy="32" r="21"/><path d="M16 25 C28 31 36 31 48 25 M16 39 C28 33 36 33 48 39"/>`,
+    HELP: `<path d="M32 52 C12 39 13 18 29 25 C31 26 32 29 32 29 C32 29 33 26 35 25 C51 18 52 39 32 52 Z"/>`,
+    GLOBE: `<circle cx="32" cy="32" r="21"/><path d="M11 32 H53 M32 11 C22 22 22 42 32 53 M32 11 C42 22 42 42 32 53"/>`,
+    BOOKS: `<path d="M14 15 H28 V52 H14 Z M30 12 H44 V52 H30 Z M46 18 H56 V52 H46 Z"/>`,
+    STORE: `<path d="M14 52 V24 H50 V52"/><path d="M10 24 L17 12 H47 L54 24 Z"/><path d="M23 52 V36 H41 V52"/>`,
+    LIGHT: `<circle cx="32" cy="25" r="12"/><path d="M26 40 H38 M28 47 H36 M32 4 V10 M14 25 H8 M56 25 H50"/>`,
+    WHEAT: `<path d="M32 12 V56"/><path d="M32 20 C20 17 20 28 32 27 M32 30 C44 27 44 38 32 37 M32 40 C20 37 20 48 32 47"/>`,
+    SPIRES: `<path d="M14 54 V34 H26 V54 M26 54 V22 H38 V54 M38 54 V30 H50 V54"/><path d="M20 20 V34 M32 8 V22 M44 16 V30"/>`,
+    VISIT: `<path d="M16 50 C18 37 27 31 32 31 C37 31 46 37 48 50"/><circle cx="32" cy="20" r="9"/><path d="M44 18 H56 M50 12 V24"/>`,
+    HEART: `<path d="M32 52 C12 39 13 18 29 25 C31 26 32 29 32 29 C32 29 33 26 35 25 C51 18 52 39 32 52 Z"/>`
+  };
+  return `<svg viewBox="0 0 64 64" focusable="false">${icons[symbol] || icons.LIGHT}</svg>`;
 }
 
 function handleTimelineClick(event) {

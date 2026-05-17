@@ -328,7 +328,7 @@ function renderHost() {
   $("#hostRoundLabel").textContent = `Question ${(game.current || 0) + 1} of ${game.order.length}`;
   $("#hostPartLabel").textContent = question.part;
   $("#hostPhaseLabel").textContent = game.phase === "scene" ? "Scene" : game.phase === "question" ? "Answering" : "Answer revealed";
-  $("#hostQuestionText").textContent = game.phase === "scene" ? `Stop ${(game.current || 0) + 1}: visual clue ready. Press Ask Question when teams are ready.` : question.question;
+  $("#hostQuestionText").textContent = getHostQuestionText(game, question);
   $("#sceneArt").innerHTML = drawScene(SCENES[qIndex], qIndex);
   renderStopFocus(question, qIndex, game.current || 0, game.phase);
   animateSceneIfNeeded(qIndex);
@@ -348,7 +348,7 @@ function renderStopFocus(question, questionIndex, position, phase) {
   $("#focusArt").innerHTML = drawScene(SCENES[questionIndex], questionIndex);
   $("#focusStopLabel").textContent = `Stop ${position + 1} of ${state.game.order.length}`;
   $("#focusProphetName").textContent = phase === "answer" ? `Answer: ${answerText}` : "";
-  $("#focusQuestionText").textContent = phase === "scene" ? "Look at the symbol and visual clue. Press Ask Question when teams are ready." : question.question;
+  $("#focusQuestionText").textContent = phase === "scene" ? "" : question.question;
 }
 
 function showBoardView() {
@@ -364,6 +364,12 @@ function renderHostAnswers(question, phase) {
       <b>${LETTERS[index]}</b><span>${choice}</span>
     </div>
   `).join("");
+}
+
+function getHostQuestionText(game, question) {
+  if (game.phase === "answer") return `Prophet: ${question.choices[question.answer]}`;
+  if (game.phase === "scene") return `Stop ${(game.current || 0) + 1}`;
+  return question.question;
 }
 
 function renderHostTeams(game) {

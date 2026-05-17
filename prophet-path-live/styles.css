@@ -361,16 +361,6 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
   background: var(--green);
 }
 
-.timeline-stop.locked strong {
-  color: white;
-  background: rgba(40, 97, 60, 0.86);
-}
-
-.timeline-stop.locked strong::before {
-  content: "LOCKED ";
-  color: #cfead7;
-}
-
 .timeline-stop.active span {
   width: 52px;
   height: 52px;
@@ -396,6 +386,30 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 
 .timeline-stop.active:not(.locked) strong {
   background: rgba(57, 38, 0, 0.82);
+}
+
+.timeline-stop.locked .symbol-icon {
+  color: white;
+  background: var(--green);
+  border-color: #cfead7;
+}
+
+.lock-mark {
+  position: absolute;
+  top: 22px;
+  right: 24px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 2px solid white;
+  border-radius: 50%;
+  color: white;
+  background: var(--green);
+  font-size: 0.9rem;
+  font-style: normal;
+  font-weight: 900;
+  pointer-events: none;
 }
 
 .stop-focus {

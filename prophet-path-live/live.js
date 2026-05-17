@@ -386,12 +386,12 @@ function renderTimeline(game) {
     const point = BOARD_POINTS[position] || BOARD_POINTS[BOARD_POINTS.length - 1];
     const completed = game.completed?.[position];
     const status = `${completed ? "locked" : ""} ${position === current ? "active" : ""}`;
-    const answerText = question.choices[question.answer];
     const symbol = BOARD_SYMBOLS[questionIndex] || "CLUE";
-    const clue = completed ? `<strong>${answerText}</strong>` : `<b class="symbol-icon" aria-hidden="true">${drawBoardIcon(symbol)}</b>`;
+    const lockedMark = completed ? `<i class="lock-mark" aria-hidden="true">✓</i>` : "";
     return `<button class="timeline-stop ${status}" type="button" data-position="${position}" style="--x: ${point.x}%; --y: ${point.y}%;" aria-label="Open stop ${position + 1}">
       <span>${position + 1}</span>
-      ${clue}
+      <b class="symbol-icon" aria-hidden="true">${drawBoardIcon(symbol)}</b>
+      ${lockedMark}
     </button>`;
   }).join("");
   $("#timelineTrack").innerHTML = boardPath + boardStops;

@@ -16,15 +16,15 @@
         </div>
 
         <form id="configForm" class="panel" onsubmit="return false">
-          <h2>Firebase Setup</h2>
-          <p class="helper">Paste your Firebase web app config. The browser keeps it on this device for future games.</p>
+          <h2>Firebase Connection</h2>
+          <p class="helper">The game connects automatically. This screen only appears if the database connection needs attention.</p>
           <textarea id="firebaseConfig" spellcheck="false" placeholder='{"apiKey":"...","authDomain":"...","databaseURL":"...","projectId":"...","appId":"..."}'></textarea>
           <p id="configStatus" class="helper status" aria-live="polite"></p>
           <div class="config-actions">
             <button class="secondary" id="clearConfigButton" type="button">Clear</button>
             <button class="primary" id="useConfigButton" type="button">Use Config</button>
           </div>
-          <p class="helper small">Create a Firebase Realtime Database project, allow read/write for testing, then paste the web config here.</p>
+          <p class="helper small">If this screen stays visible, check the Firebase Realtime Database rules and internet connection.</p>
         </form>
       </section>
 
@@ -121,7 +121,7 @@
       </section>
     </main>
 
-    <script src="questions.js?v=live3"></script>
-    <script type="module" src="live.js?v=live3"></script>
+    <script src="questions.js?v=live4"></script>
+    <script type="module" src="live.js?v=live4"></script>
   </body>
 </html>

@@ -6,6 +6,15 @@ const LETTERS = ["A", "B", "C", "D"];
 const TEAM_NAMES = ["Blue Team", "Gold Team", "Green Team", "Red Team"];
 const SCENES = ["ark", "sea", "stars", "grain", "scroll", "lions", "fish", "sling", "fire", "crowns", "city", "bones", "river", "gate", "letters", "journey", "ship", "angel", "records", "plates", "prayer", "court", "warriors", "grove", "wagons", "jail", "temple", "tithing", "spirit", "baseball", "relief", "globe", "books", "welfare", "light", "agriculture", "templeSymbol", "manyTemples", "visits", "heart"];
 const QUESTION_SECONDS = 20;
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDu1iuT56XTyXH3OkORC9JdzuV8oGpz2jI",
+  authDomain: "dad-camp-game.firebaseapp.com",
+  databaseURL: "https://dad-camp-game-default-rtdb.firebaseio.com/",
+  projectId: "dad-camp-game",
+  storageBucket: "dad-camp-game.firebasestorage.app",
+  messagingSenderId: "374929583378",
+  appId: "1:374929583378:web:1db1a9c3327c0a0c7697cb"
+};
 
 const state = {
   app: null,
@@ -58,13 +67,17 @@ $("#revealAnswerButton").addEventListener("click", revealAnswer);
 $("#nextQuestionButton").addEventListener("click", nextQuestion);
 $("#endGameButton").addEventListener("click", endGame);
 
-const savedConfig = localStorage.getItem("prophetPathFirebaseConfig");
-if (savedConfig) {
+startWithEmbeddedConfig();
+
+async function startWithEmbeddedConfig() {
   try {
-    $("#firebaseConfig").value = JSON.stringify(JSON.parse(savedConfig), null, 2);
-    setConfigStatus("Saved config loaded. Click Use Config to start.", "ready");
-  } catch {
-    localStorage.removeItem("prophetPathFirebaseConfig");
+    $("#firebaseConfig").value = JSON.stringify(FIREBASE_CONFIG, null, 2);
+    await connectFirebase(FIREBASE_CONFIG, true);
+    localStorage.setItem("prophetPathFirebaseConfig", JSON.stringify(FIREBASE_CONFIG));
+    showView(lobbyView);
+  } catch (error) {
+    showView(configView);
+    setConfigStatus(error.message || "Firebase could not connect.", "error");
   }
 }
 

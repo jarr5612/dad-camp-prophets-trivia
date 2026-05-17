@@ -76,6 +76,7 @@ $("#revealAnswerButton").addEventListener("click", revealAnswer);
 $("#nextQuestionButton").addEventListener("click", nextQuestion);
 $("#endGameButton").addEventListener("click", endGame);
 $("#musicButton").addEventListener("click", toggleMusic);
+$("#timelineTrack").addEventListener("click", handleTimelineClick);
 
 startWithEmbeddedConfig();
 
@@ -267,13 +268,17 @@ async function nextQuestion() {
 
 async function jumpToTimelineStop(position) {
   if (!state.gameCode || !state.game) return;
-  await update(gameRef(state.gameCode), {
-    current: position,
-    phase: "scene",
-    questionStartedAt: 0,
-    questionEndsAt: 0,
-    submissions: {}
-  });
+  try {
+    await update(gameRef(state.gameCode), {
+      current: position,
+      phase: "scene",
+      questionStartedAt: 0,
+      questionEndsAt: 0,
+      submissions: {}
+    });
+  } catch (error) {
+    $("#hostQuestionText").textContent = `Timeline stop could not open. ${error.message}`;
+  }
 }
 
 async function endGame() {
@@ -341,16 +346,19 @@ function renderTimeline(game) {
     const question = QUESTIONS[questionIndex];
     const status = position < current ? "visited" : position === current ? "active" : "";
     const label = question.prophet.replace(" (Old Testament)", "");
-    return `<button class="timeline-stop ${status}" type="button" data-position="${position}">
+    return `<button class="timeline-stop ${status}" type="button" data-position="${position}" aria-label="Open ${label}">
       <span>${position + 1}</span>
       <strong>${label}</strong>
     </button>`;
   }).join("");
-  $("#timelineTrack").querySelectorAll("[data-position]").forEach((button) => {
-    button.addEventListener("click", () => jumpToTimelineStop(Number(button.dataset.position)));
-  });
   const active = $("#timelineTrack .timeline-stop.active");
   if (active) active.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+}
+
+function handleTimelineClick(event) {
+  const stop = event.target.closest("[data-position]");
+  if (!stop) return;
+  jumpToTimelineStop(Number(stop.dataset.position));
 }
 
 function animateSceneIfNeeded(questionIndex) {

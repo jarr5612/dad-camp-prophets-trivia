@@ -213,6 +213,7 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
   left: 18px;
   right: 18px;
   bottom: 16px;
+  z-index: 4;
   display: flex;
   gap: 10px;
   align-items: center;
@@ -223,6 +224,7 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
   box-shadow: 0 16px 32px rgba(9, 25, 42, 0.24);
   overflow-x: auto;
   scrollbar-width: thin;
+  pointer-events: auto;
 }
 
 .timeline-track::before {
@@ -234,22 +236,43 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
   height: 4px;
   border-radius: 999px;
   background: rgba(255,255,255,0.35);
+  pointer-events: none;
+}
+
+.timeline-help {
+  position: absolute;
+  left: 24px;
+  bottom: 112px;
+  z-index: 3;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: white;
+  background: rgba(13, 34, 54, 0.78);
+  font-size: 0.9rem;
+  font-weight: 900;
 }
 
 .timeline-stop {
   position: relative;
   z-index: 1;
-  flex: 0 0 118px;
-  min-height: 76px;
+  flex: 0 0 132px;
+  min-height: 86px;
   display: grid;
   justify-items: center;
   align-content: start;
   gap: 5px;
-  padding: 0 8px 8px;
+  padding: 0 10px 10px;
   border: 0;
   color: white;
   background: transparent;
   cursor: pointer;
+  touch-action: manipulation;
+}
+
+.timeline-stop:hover span,
+.timeline-stop:focus-visible span {
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 0 0 0 6px rgba(255,255,255,0.22);
 }
 
 .timeline-stop span {
@@ -262,6 +285,8 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
   color: #173a58;
   background: #fbf6ea;
   font-weight: 900;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  pointer-events: none;
 }
 
 .timeline-stop strong {
@@ -270,6 +295,7 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
   line-height: 1.05;
   text-align: center;
   text-transform: uppercase;
+  pointer-events: none;
 }
 
 .timeline-stop.visited span {

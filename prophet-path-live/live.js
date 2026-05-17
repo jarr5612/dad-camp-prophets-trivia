@@ -5,6 +5,7 @@ const QUESTIONS = window.PROPHET_PATH_QUESTIONS;
 const LETTERS = ["A", "B", "C", "D"];
 const TEAM_NAMES = ["Blue Team", "Gold Team", "Green Team", "Red Team"];
 const SCENES = ["ark", "sea", "stars", "grain", "scroll", "lions", "fish", "sling", "fire", "crowns", "city", "bones", "river", "gate", "letters", "journey", "ship", "angel", "records", "plates", "prayer", "court", "warriors", "grove", "wagons", "jail", "temple", "tithing", "spirit", "baseball", "relief", "globe", "books", "welfare", "light", "agriculture", "templeSymbol", "manyTemples", "visits", "heart"];
+const TIMELINE_PROPHETS = ["NOAH", "ABRAHAM", "JOSEPH (Old Testament)", "MOSES", "SAMUEL", "DAVID", "ELIJAH", "ISAIAH", "JEREMIAH", "EZEKIEL", "DANIEL", "JONAH", "JOHN THE BAPTIST", "PETER", "PAUL", "LEHI", "NEPHI", "ENOS", "ABINADI", "ALMA THE YOUNGER", "HELAMAN", "MORMON", "MORONI", "JOSEPH SMITH", "BRIGHAM YOUNG", "JOHN TAYLOR", "WILFORD WOODRUFF", "LORENZO SNOW", "JOSEPH F. SMITH", "HEBER J. GRANT", "GEORGE ALBERT SMITH", "DAVID O. McKAY", "JOSEPH FIELDING SMITH", "HAROLD B. LEE", "SPENCER W. KIMBALL", "EZRA TAFT BENSON", "HOWARD W. HUNTER", "GORDON B. HINCKLEY", "THOMAS S. MONSON", "RUSSELL M. NELSON"];
 const QUESTION_SECONDS = 20;
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDu1iuT56XTyXH3OkORC9JdzuV8oGpz2jI",
@@ -30,7 +31,8 @@ const state = {
   musicTimer: null,
   musicPlaying: false,
   musicStep: 0,
-  musicMaster: null
+  musicMaster: null,
+  lastSceneQuestionIndex: null
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -148,7 +150,7 @@ async function createGame() {
     setLobbyStatus("Creating game...");
     const code = makeCode();
     const teamCount = Number($("#teamCount").value);
-    const order = QUESTIONS.map((_, index) => index);
+    const order = getSelectedOrder();
     if ($("#questionOrder").value === "shuffle") shuffle(order);
     const teams = {};
     TEAM_NAMES.slice(0, teamCount).forEach((name, index) => {
@@ -263,6 +265,17 @@ async function nextQuestion() {
   });
 }
 
+async function jumpToTimelineStop(position) {
+  if (!state.gameCode || !state.game) return;
+  await update(gameRef(state.gameCode), {
+    current: position,
+    phase: "scene",
+    questionStartedAt: 0,
+    questionEndsAt: 0,
+    submissions: {}
+  });
+}
+
 async function endGame() {
   if (confirm("End this live game?")) {
     stopMusic();
@@ -297,11 +310,13 @@ function renderHost() {
   $("#hostPhaseLabel").textContent = game.phase === "scene" ? "Scene" : game.phase === "question" ? "Answering" : "Answer revealed";
   $("#hostQuestionText").textContent = game.phase === "scene" ? "Teams look at the visual clue. Press Ask Question when ready." : question.question;
   $("#sceneArt").innerHTML = drawScene(SCENES[qIndex], qIndex);
+  animateSceneIfNeeded(qIndex);
   $("#askQuestionButton").disabled = game.phase !== "scene";
   $("#revealAnswerButton").disabled = game.phase !== "question";
   $("#nextQuestionButton").disabled = game.current >= game.order.length - 1;
   renderHostAnswers(question, game.phase);
   renderHostTeams(game);
+  renderTimeline(game);
 }
 
 function renderHostAnswers(question, phase) {
@@ -318,6 +333,33 @@ function renderHostTeams(game) {
     const submission = game.submissions?.[teamId];
     return `<div class="team-row"><span>${team.deviceName || team.name}</span><strong>${team.score || 0}</strong><small>${submission ? "Answer in " + (submission.elapsedMs / 1000).toFixed(1) + "s" : team.last || "Waiting"}</small></div>`;
   }).join("");
+}
+
+function renderTimeline(game) {
+  const current = game.current || 0;
+  $("#timelineTrack").innerHTML = game.order.map((questionIndex, position) => {
+    const question = QUESTIONS[questionIndex];
+    const status = position < current ? "visited" : position === current ? "active" : "";
+    const label = question.prophet.replace(" (Old Testament)", "");
+    return `<button class="timeline-stop ${status}" type="button" data-position="${position}">
+      <span>${position + 1}</span>
+      <strong>${label}</strong>
+    </button>`;
+  }).join("");
+  $("#timelineTrack").querySelectorAll("[data-position]").forEach((button) => {
+    button.addEventListener("click", () => jumpToTimelineStop(Number(button.dataset.position)));
+  });
+  const active = $("#timelineTrack .timeline-stop.active");
+  if (active) active.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+}
+
+function animateSceneIfNeeded(questionIndex) {
+  if (state.lastSceneQuestionIndex === questionIndex) return;
+  state.lastSceneQuestionIndex = questionIndex;
+  const scene = $("#sceneArt");
+  scene.classList.remove("zoom-in");
+  void scene.offsetWidth;
+  scene.classList.add("zoom-in");
 }
 
 function syncHostTimerLoop() {
@@ -376,6 +418,15 @@ function getRemainingSeconds(game) {
   if (game.phase !== "question") return QUESTION_SECONDS;
   const endsAt = game.questionEndsAt || ((game.questionStartedAt || Date.now()) + QUESTION_SECONDS * 1000);
   return Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+}
+
+function getSelectedOrder() {
+  if ($("#questionOrder").value !== "timeline") return QUESTIONS.map((_, index) => index);
+  const order = TIMELINE_PROPHETS
+    .map((prophet) => QUESTIONS.findIndex((question) => question.prophet === prophet))
+    .filter((index) => index >= 0);
+  const remaining = QUESTIONS.map((_, index) => index).filter((index) => !order.includes(index));
+  return order.concat(remaining);
 }
 
 function toggleMusic() {

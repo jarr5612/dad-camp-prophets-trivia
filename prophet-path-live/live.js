@@ -346,7 +346,7 @@ function renderStopFocus(question, questionIndex, position, phase) {
   $("#timelineTrack").classList.toggle("dimmed", shouldShowFocus);
   $("#focusArt").innerHTML = drawScene(SCENES[questionIndex], questionIndex);
   $("#focusStopLabel").textContent = `Stop ${position + 1} of ${state.game.order.length}`;
-  $("#focusProphetName").textContent = phase === "answer" ? `Answer: ${answerText}` : "Visual Clue";
+  $("#focusProphetName").textContent = phase === "answer" ? `Answer: ${answerText}` : "";
   $("#focusQuestionText").textContent = phase === "scene" ? "Look at the symbol and visual clue. Press Ask Question when teams are ready." : question.question;
 }
 
@@ -389,8 +389,8 @@ function renderTimeline(game) {
     const symbol = BOARD_SYMBOLS[questionIndex] || "CLUE";
     const lockedMark = completed ? `<i class="lock-mark" aria-hidden="true">✓</i>` : "";
     return `<button class="timeline-stop ${status}" type="button" data-position="${position}" style="--x: ${point.x}%; --y: ${point.y}%;" aria-label="Open stop ${position + 1}">
-      <span>${position + 1}</span>
       <b class="symbol-icon" aria-hidden="true">${drawBoardIcon(symbol)}</b>
+      <span>${position + 1}</span>
       ${lockedMark}
     </button>`;
   }).join("");

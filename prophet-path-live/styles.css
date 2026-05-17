@@ -277,13 +277,13 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
   left: var(--x);
   top: var(--y);
   z-index: 2;
-  width: 112px;
-  min-height: 74px;
+  width: 78px;
+  min-height: 78px;
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: 5px;
-  padding: 4px 8px 8px;
+  gap: 0;
+  padding: 0;
   border: 0;
   color: white;
   background: transparent;
@@ -299,14 +299,19 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 }
 
 .timeline-stop span {
-  width: 38px;
-  height: 38px;
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  width: 24px;
+  height: 24px;
+  z-index: 2;
   display: grid;
   place-items: center;
-  border: 3px solid rgba(255,255,255,0.75);
+  border: 2px solid rgba(255,255,255,0.9);
   border-radius: 50%;
-  color: #173a58;
-  background: #fbf6ea;
+  color: white;
+  background: rgba(13, 34, 54, 0.9);
+  font-size: 0.78rem;
   font-weight: 900;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   pointer-events: none;
@@ -326,8 +331,8 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 }
 
 .symbol-icon {
-  width: 38px;
-  height: 38px;
+  width: 58px;
+  height: 58px;
   display: grid;
   place-items: center;
   padding: 5px;
@@ -362,8 +367,8 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 }
 
 .timeline-stop.active span {
-  width: 52px;
-  height: 52px;
+  width: 28px;
+  height: 28px;
   color: #392600;
   background: var(--gold);
   border-color: #fff3c6;
@@ -371,8 +376,8 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 }
 
 .timeline-stop.active:not(.locked) .symbol-icon {
-  width: 52px;
-  height: 52px;
+  width: 66px;
+  height: 66px;
   color: #392600;
   background: var(--gold);
   border-color: #fff3c6;
@@ -396,8 +401,8 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 
 .lock-mark {
   position: absolute;
-  top: 22px;
-  right: 24px;
+  top: 8px;
+  right: 6px;
   width: 24px;
   height: 24px;
   display: grid;
@@ -471,6 +476,10 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
   margin: 0;
   font-size: clamp(2.2rem, 4vw, 4rem);
   line-height: 0.95;
+}
+
+.focus-copy h3:empty {
+  display: none;
 }
 
 .focus-copy p:last-child {

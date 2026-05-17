@@ -39,7 +39,8 @@ const state = {
   musicPlaying: false,
   musicStep: 0,
   musicMaster: null,
-  lastSceneQuestionIndex: null
+  lastSceneQuestionIndex: null,
+  boardFocused: false
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -84,6 +85,7 @@ $("#nextQuestionButton").addEventListener("click", nextQuestion);
 $("#endGameButton").addEventListener("click", endGame);
 $("#musicButton").addEventListener("click", toggleMusic);
 $("#timelineTrack").addEventListener("click", handleTimelineClick);
+$("#backToBoardButton").addEventListener("click", showBoardView);
 
 startWithEmbeddedConfig();
 
@@ -264,6 +266,7 @@ async function revealAnswer() {
 
 async function nextQuestion() {
   const next = Math.min((state.game.current || 0) + 1, state.game.order.length - 1);
+  state.boardFocused = false;
   await update(gameRef(state.gameCode), {
     current: next,
     phase: "scene",
@@ -276,6 +279,7 @@ async function nextQuestion() {
 async function jumpToTimelineStop(position) {
   if (!state.gameCode || !state.game) return;
   try {
+    state.boardFocused = true;
     await update(gameRef(state.gameCode), {
       current: position,
       phase: "scene",
@@ -322,6 +326,7 @@ function renderHost() {
   $("#hostPhaseLabel").textContent = game.phase === "scene" ? "Scene" : game.phase === "question" ? "Answering" : "Answer revealed";
   $("#hostQuestionText").textContent = game.phase === "scene" ? `Stop ${(game.current || 0) + 1}: ${question.question}` : question.question;
   $("#sceneArt").innerHTML = drawScene(SCENES[qIndex], qIndex);
+  renderStopFocus(question, qIndex, game.current || 0, game.phase);
   animateSceneIfNeeded(qIndex);
   $("#askQuestionButton").disabled = game.phase !== "scene";
   $("#revealAnswerButton").disabled = game.phase !== "question";
@@ -329,6 +334,22 @@ function renderHost() {
   renderHostAnswers(question, game.phase);
   renderHostTeams(game);
   renderTimeline(game);
+}
+
+function renderStopFocus(question, questionIndex, position, phase) {
+  const shouldShowFocus = state.boardFocused || phase !== "scene";
+  $("#stopFocus").classList.toggle("hidden", !shouldShowFocus);
+  $("#timelineTrack").classList.toggle("dimmed", shouldShowFocus);
+  $("#focusArt").innerHTML = drawScene(SCENES[questionIndex], questionIndex);
+  $("#focusStopLabel").textContent = `Stop ${position + 1} of ${state.game.order.length}`;
+  $("#focusProphetName").textContent = question.prophet.replace(" (Old Testament)", "");
+  $("#focusQuestionText").textContent = question.question;
+}
+
+function showBoardView() {
+  state.boardFocused = false;
+  $("#stopFocus").classList.add("hidden");
+  $("#timelineTrack").classList.remove("dimmed");
 }
 
 function renderHostAnswers(question, phase) {

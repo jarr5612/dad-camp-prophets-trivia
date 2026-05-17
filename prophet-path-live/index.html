@@ -84,6 +84,15 @@
             <div id="sceneArt" class="scene-art"></div>
             <div class="timeline-help">Click a board stop to zoom in</div>
             <div id="timelineTrack" class="timeline-track game-board" aria-label="Prophet game board"></div>
+            <div id="stopFocus" class="stop-focus hidden" aria-live="polite">
+              <button id="backToBoardButton" class="ghost utility-button" type="button">Board</button>
+              <div id="focusArt" class="focus-art"></div>
+              <div class="focus-copy">
+                <p id="focusStopLabel" class="eyebrow">Stop 1</p>
+                <h3 id="focusProphetName">Prophet</h3>
+                <p id="focusQuestionText">Question</p>
+              </div>
+            </div>
           </div>
           <aside class="score-panel">
             <h3>Teams</h3>
@@ -129,7 +138,7 @@
       </section>
     </main>
 
-    <script src="questions.js?v=live10"></script>
-    <script type="module" src="live.js?v=live10"></script>
+    <script src="questions.js?v=live11"></script>
+    <script type="module" src="live.js?v=live11"></script>
   </body>
 </html>

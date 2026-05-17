@@ -6,6 +6,13 @@ const LETTERS = ["A", "B", "C", "D"];
 const TEAM_NAMES = ["Blue Team", "Gold Team", "Green Team", "Red Team"];
 const SCENES = ["ark", "sea", "stars", "grain", "scroll", "lions", "fish", "sling", "fire", "crowns", "city", "bones", "river", "gate", "letters", "journey", "ship", "angel", "records", "plates", "prayer", "court", "warriors", "grove", "wagons", "jail", "temple", "tithing", "spirit", "baseball", "relief", "globe", "books", "welfare", "light", "agriculture", "templeSymbol", "manyTemples", "visits", "heart"];
 const TIMELINE_PROPHETS = ["NOAH", "ABRAHAM", "JOSEPH (Old Testament)", "MOSES", "SAMUEL", "DAVID", "ELIJAH", "ISAIAH", "JEREMIAH", "EZEKIEL", "DANIEL", "JONAH", "JOHN THE BAPTIST", "PETER", "PAUL", "LEHI", "NEPHI", "ENOS", "ABINADI", "ALMA THE YOUNGER", "HELAMAN", "MORMON", "MORONI", "JOSEPH SMITH", "BRIGHAM YOUNG", "JOHN TAYLOR", "WILFORD WOODRUFF", "LORENZO SNOW", "JOSEPH F. SMITH", "HEBER J. GRANT", "GEORGE ALBERT SMITH", "DAVID O. McKAY", "JOSEPH FIELDING SMITH", "HAROLD B. LEE", "SPENCER W. KIMBALL", "EZRA TAFT BENSON", "HOWARD W. HUNTER", "GORDON B. HINCKLEY", "THOMAS S. MONSON", "RUSSELL M. NELSON"];
+const BOARD_POINTS = Array.from({ length: 40 }, (_, index) => {
+  const row = Math.floor(index / 8);
+  const column = index % 8;
+  const x = row % 2 === 0 ? 7 + column * 12.2 : 92 - column * 12.2;
+  const y = 12 + row * 18.4 + (column % 2 === 0 ? 0 : 3.8);
+  return { x, y };
+});
 const QUESTION_SECONDS = 20;
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDu1iuT56XTyXH3OkORC9JdzuV8oGpz2jI",
@@ -313,7 +320,7 @@ function renderHost() {
   $("#hostRoundLabel").textContent = `Question ${(game.current || 0) + 1} of ${game.order.length}`;
   $("#hostPartLabel").textContent = question.part;
   $("#hostPhaseLabel").textContent = game.phase === "scene" ? "Scene" : game.phase === "question" ? "Answering" : "Answer revealed";
-  $("#hostQuestionText").textContent = game.phase === "scene" ? "Teams look at the visual clue. Press Ask Question when ready." : question.question;
+  $("#hostQuestionText").textContent = game.phase === "scene" ? `Stop ${(game.current || 0) + 1}: ${question.question}` : question.question;
   $("#sceneArt").innerHTML = drawScene(SCENES[qIndex], qIndex);
   animateSceneIfNeeded(qIndex);
   $("#askQuestionButton").disabled = game.phase !== "scene";
@@ -342,17 +349,24 @@ function renderHostTeams(game) {
 
 function renderTimeline(game) {
   const current = game.current || 0;
-  $("#timelineTrack").innerHTML = game.order.map((questionIndex, position) => {
+  const pathPoints = game.order.map((_, position) => {
+    const point = BOARD_POINTS[position] || BOARD_POINTS[BOARD_POINTS.length - 1];
+    return `${point.x},${point.y}`;
+  }).join(" ");
+  const boardPath = `<svg class="board-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <polyline points="${pathPoints}" />
+  </svg>`;
+  const boardStops = game.order.map((questionIndex, position) => {
     const question = QUESTIONS[questionIndex];
+    const point = BOARD_POINTS[position] || BOARD_POINTS[BOARD_POINTS.length - 1];
     const status = position < current ? "visited" : position === current ? "active" : "";
     const label = question.prophet.replace(" (Old Testament)", "");
-    return `<button class="timeline-stop ${status}" type="button" data-position="${position}" aria-label="Open ${label}">
+    return `<button class="timeline-stop ${status}" type="button" data-position="${position}" style="--x: ${point.x}%; --y: ${point.y}%;" aria-label="Open ${label}">
       <span>${position + 1}</span>
       <strong>${label}</strong>
     </button>`;
   }).join("");
-  const active = $("#timelineTrack .timeline-stop.active");
-  if (active) active.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  $("#timelineTrack").innerHTML = boardPath + boardStops;
 }
 
 function handleTimelineClick(event) {

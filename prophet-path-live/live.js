@@ -6,6 +6,7 @@ const LETTERS = ["A", "B", "C", "D"];
 const TEAM_NAMES = ["Blue Team", "Gold Team", "Green Team", "Red Team"];
 const SCENES = ["ark", "sea", "stars", "grain", "scroll", "lions", "fish", "sling", "fire", "crowns", "city", "bones", "river", "gate", "letters", "journey", "ship", "angel", "records", "plates", "prayer", "court", "warriors", "grove", "wagons", "jail", "temple", "tithing", "spirit", "baseball", "relief", "globe", "books", "welfare", "light", "agriculture", "templeSymbol", "manyTemples", "visits", "heart"];
 const BOARD_SYMBOLS = ["ARK", "STARS", "COAT", "SEA", "CROWN", "SLING", "FIRE", "SCROLL", "CITY", "BONES", "LIONS", "FISH", "RIVER", "GATE", "ROAD", "TENT", "SHIP", "PRAYER", "COURT", "ANGEL", "SHIELD", "RECORD", "PLATES", "GROVE", "WAGON", "JAIL", "TEMPLE", "COIN", "SPIRIT", "BALL", "HELP", "GLOBE", "BOOKS", "STORE", "LIGHT", "WHEAT", "TEMPLE", "SPIRES", "VISIT", "HEART"];
+const BOARD_GLYPHS = ["⛵", "★", "▤", "≈", "♛", "◒", "♨", "▱", "▥", "✕", "◎", "◁", "〰", "⌂", "↝", "△", "⛵", "✦", "⚖", "✧", "⬟", "▤", "▣", "♣", "▰", "▥", "⌂", "$", "◈", "●", "♥", "◎", "▤", "⌂", "✷", "♧", "⌂", "△", "☉", "♥"];
 const TIMELINE_PROPHETS = ["NOAH", "ABRAHAM", "JOSEPH (Old Testament)", "MOSES", "SAMUEL", "DAVID", "ELIJAH", "ISAIAH", "JEREMIAH", "EZEKIEL", "DANIEL", "JONAH", "JOHN THE BAPTIST", "PETER", "PAUL", "LEHI", "NEPHI", "ENOS", "ABINADI", "ALMA THE YOUNGER", "HELAMAN", "MORMON", "MORONI", "JOSEPH SMITH", "BRIGHAM YOUNG", "JOHN TAYLOR", "WILFORD WOODRUFF", "LORENZO SNOW", "JOSEPH F. SMITH", "HEBER J. GRANT", "GEORGE ALBERT SMITH", "DAVID O. McKAY", "JOSEPH FIELDING SMITH", "HAROLD B. LEE", "SPENCER W. KIMBALL", "EZRA TAFT BENSON", "HOWARD W. HUNTER", "GORDON B. HINCKLEY", "THOMAS S. MONSON", "RUSSELL M. NELSON"];
 const BOARD_POINTS = Array.from({ length: 40 }, (_, index) => {
   const row = Math.floor(index / 8);
@@ -386,10 +387,10 @@ function renderTimeline(game) {
     const point = BOARD_POINTS[position] || BOARD_POINTS[BOARD_POINTS.length - 1];
     const completed = game.completed?.[position];
     const status = `${completed ? "locked" : ""} ${position === current ? "active" : ""}`;
-    const symbol = BOARD_SYMBOLS[questionIndex] || "CLUE";
+    const glyph = BOARD_GLYPHS[questionIndex] || "◆";
     const lockedMark = completed ? `<i class="lock-mark" aria-hidden="true">✓</i>` : "";
     return `<button class="timeline-stop ${status}" type="button" data-position="${position}" style="--x: ${point.x}%; --y: ${point.y}%;" aria-label="Open stop ${position + 1}">
-      <b class="symbol-icon" aria-hidden="true">${drawBoardIcon(symbol)}</b>
+      <b class="symbol-icon" aria-hidden="true">${glyph}</b>
       <span>${position + 1}</span>
       ${lockedMark}
     </button>`;

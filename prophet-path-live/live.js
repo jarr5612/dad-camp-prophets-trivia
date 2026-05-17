@@ -5,6 +5,7 @@ const QUESTIONS = window.PROPHET_PATH_QUESTIONS;
 const LETTERS = ["A", "B", "C", "D"];
 const TEAM_NAMES = ["Blue Team", "Gold Team", "Green Team", "Red Team"];
 const SCENES = ["ark", "sea", "stars", "grain", "scroll", "lions", "fish", "sling", "fire", "crowns", "city", "bones", "river", "gate", "letters", "journey", "ship", "angel", "records", "plates", "prayer", "court", "warriors", "grove", "wagons", "jail", "temple", "tithing", "spirit", "baseball", "relief", "globe", "books", "welfare", "light", "agriculture", "templeSymbol", "manyTemples", "visits", "heart"];
+const BOARD_SYMBOLS = ["ARK", "STARS", "COAT", "SEA", "CROWN", "SLING", "FIRE", "SCROLL", "CITY", "BONES", "LIONS", "FISH", "RIVER", "GATE", "ROAD", "TENT", "SHIP", "PRAYER", "COURT", "ANGEL", "SHIELD", "RECORD", "PLATES", "GROVE", "WAGON", "JAIL", "TEMPLE", "COIN", "SPIRIT", "BALL", "HELP", "GLOBE", "BOOKS", "STORE", "LIGHT", "WHEAT", "TEMPLE", "SPIRES", "VISIT", "HEART"];
 const TIMELINE_PROPHETS = ["NOAH", "ABRAHAM", "JOSEPH (Old Testament)", "MOSES", "SAMUEL", "DAVID", "ELIJAH", "ISAIAH", "JEREMIAH", "EZEKIEL", "DANIEL", "JONAH", "JOHN THE BAPTIST", "PETER", "PAUL", "LEHI", "NEPHI", "ENOS", "ABINADI", "ALMA THE YOUNGER", "HELAMAN", "MORMON", "MORONI", "JOSEPH SMITH", "BRIGHAM YOUNG", "JOHN TAYLOR", "WILFORD WOODRUFF", "LORENZO SNOW", "JOSEPH F. SMITH", "HEBER J. GRANT", "GEORGE ALBERT SMITH", "DAVID O. McKAY", "JOSEPH FIELDING SMITH", "HAROLD B. LEE", "SPENCER W. KIMBALL", "EZRA TAFT BENSON", "HOWARD W. HUNTER", "GORDON B. HINCKLEY", "THOMAS S. MONSON", "RUSSELL M. NELSON"];
 const BOARD_POINTS = Array.from({ length: 40 }, (_, index) => {
   const row = Math.floor(index / 8);
@@ -172,6 +173,7 @@ async function createGame() {
       phase: "scene",
       current: 0,
       order,
+      completed: {},
       questionStartedAt: 0,
       teams,
       submissions: {}
@@ -252,6 +254,7 @@ async function revealAnswer() {
   state.autoRevealing = true;
   const question = getQuestion(game);
   const updates = { phase: "answer" };
+  updates[`completed/${game.current || 0}`] = true;
   Object.entries(game.teams || {}).forEach(([teamId, team]) => {
     const submission = game.submissions?.[teamId];
     const onTime = submission && submission.elapsedMs <= QUESTION_SECONDS * 1000;
@@ -324,7 +327,7 @@ function renderHost() {
   $("#hostRoundLabel").textContent = `Question ${(game.current || 0) + 1} of ${game.order.length}`;
   $("#hostPartLabel").textContent = question.part;
   $("#hostPhaseLabel").textContent = game.phase === "scene" ? "Scene" : game.phase === "question" ? "Answering" : "Answer revealed";
-  $("#hostQuestionText").textContent = game.phase === "scene" ? `Stop ${(game.current || 0) + 1}: ${question.question}` : question.question;
+  $("#hostQuestionText").textContent = game.phase === "scene" ? `Stop ${(game.current || 0) + 1}: visual clue ready. Press Ask Question when teams are ready.` : question.question;
   $("#sceneArt").innerHTML = drawScene(SCENES[qIndex], qIndex);
   renderStopFocus(question, qIndex, game.current || 0, game.phase);
   animateSceneIfNeeded(qIndex);
@@ -338,12 +341,13 @@ function renderHost() {
 
 function renderStopFocus(question, questionIndex, position, phase) {
   const shouldShowFocus = state.boardFocused || phase !== "scene";
+  const answerText = question.choices[question.answer];
   $("#stopFocus").classList.toggle("hidden", !shouldShowFocus);
   $("#timelineTrack").classList.toggle("dimmed", shouldShowFocus);
   $("#focusArt").innerHTML = drawScene(SCENES[questionIndex], questionIndex);
   $("#focusStopLabel").textContent = `Stop ${position + 1} of ${state.game.order.length}`;
-  $("#focusProphetName").textContent = question.prophet.replace(" (Old Testament)", "");
-  $("#focusQuestionText").textContent = question.question;
+  $("#focusProphetName").textContent = phase === "answer" ? `Answer: ${answerText}` : `Symbol: ${BOARD_SYMBOLS[questionIndex] || "CLUE"}`;
+  $("#focusQuestionText").textContent = phase === "scene" ? "Look at the symbol and visual clue. Press Ask Question when teams are ready." : question.question;
 }
 
 function showBoardView() {
@@ -380,9 +384,11 @@ function renderTimeline(game) {
   const boardStops = game.order.map((questionIndex, position) => {
     const question = QUESTIONS[questionIndex];
     const point = BOARD_POINTS[position] || BOARD_POINTS[BOARD_POINTS.length - 1];
-    const status = position < current ? "visited" : position === current ? "active" : "";
-    const label = question.prophet.replace(" (Old Testament)", "");
-    return `<button class="timeline-stop ${status}" type="button" data-position="${position}" style="--x: ${point.x}%; --y: ${point.y}%;" aria-label="Open ${label}">
+    const completed = game.completed?.[position];
+    const status = `${completed ? "locked" : ""} ${position === current ? "active" : ""}`;
+    const answerText = question.choices[question.answer];
+    const label = completed ? answerText : (BOARD_SYMBOLS[questionIndex] || "CLUE");
+    return `<button class="timeline-stop ${status}" type="button" data-position="${position}" style="--x: ${point.x}%; --y: ${point.y}%;" aria-label="Open stop ${position + 1}">
       <span>${position + 1}</span>
       <strong>${label}</strong>
     </button>`;

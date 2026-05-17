@@ -150,7 +150,7 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 .host-view {
   min-height: calc(100vh - 36px);
   display: grid;
-  grid-template-rows: auto minmax(390px, 1fr) auto auto;
+  grid-template-rows: auto minmax(390px, 1fr) auto;
   gap: 12px;
 }
 
@@ -508,12 +508,19 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 
 .question-panel {
   position: relative;
-  min-height: 230px;
-  padding: 18px 170px 18px 18px;
+  min-height: 0;
+  padding: 12px;
   background: var(--paper);
 }
 
-.question-meta { display: flex; gap: 10px; margin-bottom: 12px; }
+.host-control-bar {
+  display: grid;
+  grid-template-columns: auto 124px minmax(380px, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.question-meta { display: flex; gap: 10px; margin: 0; }
 .question-meta span {
   display: inline-flex;
   align-items: center;
@@ -527,11 +534,9 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 #hostPhaseLabel, #timerPill { color: #392600; background: #ffe2a0; }
 
 .timer-card {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 128px;
-  min-height: 128px;
+  position: static;
+  width: 112px;
+  min-height: 82px;
   display: grid;
   place-items: center;
   align-content: center;
@@ -549,7 +554,7 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 }
 
 .timer-card strong {
-  font-size: 4rem;
+  font-size: 3rem;
   line-height: 0.95;
 }
 
@@ -566,8 +571,9 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 }
 
 #hostQuestionText {
-  margin: 0 0 14px;
-  font-size: clamp(1.25rem, 2vw, 1.9rem);
+  display: none;
+  margin: 0;
+  font-size: 1rem;
   line-height: 1.18;
   font-weight: 900;
 }
@@ -576,6 +582,16 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
+}
+
+.host-control-bar .answers {
+  display: none;
+}
+
+.host-control-bar .controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .answer {

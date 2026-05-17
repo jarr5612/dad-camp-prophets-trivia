@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { deleteApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getDatabase, ref, set, update, onValue, get, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
 
 const QUESTIONS = window.PROPHET_PATH_QUESTIONS;
@@ -22,22 +22,30 @@ const configView = $("#configView");
 const lobbyView = $("#lobbyView");
 const hostView = $("#hostView");
 const teamView = $("#teamView");
+const configStatus = $("#configStatus");
+const lobbyStatus = $("#lobbyStatus");
 
-$("#configForm").addEventListener("submit", (event) => {
+$("#configForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const raw = $("#firebaseConfig").value.trim();
   try {
-    const config = JSON.parse(raw);
+    setConfigStatus("Checking Firebase connection...");
+    const config = parseFirebaseConfig(raw);
+    validateFirebaseConfig(config);
+    await connectFirebase(config, true);
     localStorage.setItem("prophetPathFirebaseConfig", JSON.stringify(config));
-    connectFirebase(config);
-  } catch {
-    alert("Paste a valid Firebase config object.");
+    $("#firebaseConfig").value = JSON.stringify(config, null, 2);
+    setConfigStatus("Connected. Opening the game lobby.", "ready");
+    showView(lobbyView);
+  } catch (error) {
+    setConfigStatus(error.message || "Firebase could not connect.", "error");
   }
 });
 
 $("#clearConfigButton").addEventListener("click", () => {
   localStorage.removeItem("prophetPathFirebaseConfig");
   $("#firebaseConfig").value = "";
+  setConfigStatus("");
 });
 
 $("#createGameButton").addEventListener("click", createGame);
@@ -49,69 +57,131 @@ $("#endGameButton").addEventListener("click", endGame);
 
 const savedConfig = localStorage.getItem("prophetPathFirebaseConfig");
 if (savedConfig) {
-  $("#firebaseConfig").value = savedConfig;
   try {
-    connectFirebase(JSON.parse(savedConfig));
+    $("#firebaseConfig").value = JSON.stringify(JSON.parse(savedConfig), null, 2);
+    setConfigStatus("Saved config loaded. Click Use Config to start.", "ready");
   } catch {
     localStorage.removeItem("prophetPathFirebaseConfig");
   }
 }
 
-function connectFirebase(config) {
-  state.app = initializeApp(config);
+async function connectFirebase(config, shouldTest = false) {
+  const existingApp = getApps().find((app) => app.name === "prophetPathLive");
+  if (existingApp && hasDifferentFirebaseConfig(existingApp.options, config)) await deleteApp(existingApp);
+  state.app = getApps().find((app) => app.name === "prophetPathLive") || initializeApp(config, "prophetPathLive");
   state.db = getDatabase(state.app);
-  showView(lobbyView);
+  if (shouldTest) await testDatabaseConnection();
+}
+
+function parseFirebaseConfig(raw) {
+  if (!raw) throw new Error("Paste the Firebase config first.");
+  let text = raw.trim();
+  const objectMatch = text.match(/firebaseConfig\s*=\s*({[\s\S]*?});?$/) || text.match(/^({[\s\S]*})$/);
+  if (objectMatch) text = objectMatch[1];
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    const jsonish = text
+      .replace(/([{,]\s*)([A-Za-z_$][\w$]*)\s*:/g, '$1"$2":')
+      .replace(/'/g, '"')
+      .replace(/,\s*([}\]])/g, "$1");
+    try {
+      return JSON.parse(jsonish);
+    } catch {
+      throw new Error("Paste a valid Firebase config object.");
+    }
+  }
+}
+
+function validateFirebaseConfig(config) {
+  const requiredKeys = ["apiKey", "authDomain", "databaseURL", "projectId", "appId"];
+  const missing = requiredKeys.filter((key) => !config[key]);
+  if (missing.length) throw new Error(`Firebase config is missing: ${missing.join(", ")}.`);
+  if (!config.databaseURL.includes("firebaseio.com")) {
+    throw new Error("Use the config that includes the Realtime Database URL.");
+  }
+}
+
+function hasDifferentFirebaseConfig(current, next) {
+  return ["apiKey", "authDomain", "databaseURL", "projectId", "appId"].some((key) => current[key] !== next[key]);
+}
+
+async function testDatabaseConnection() {
+  const id = Math.random().toString(36).slice(2);
+  const testRef = ref(state.db, `connectionTests/${id}`);
+  try {
+    await set(testRef, { ok: true, at: Date.now() });
+    await remove(testRef);
+  } catch (error) {
+    throw new Error(`Firebase connected, but the database did not allow writing. Check Realtime Database rules. (${error.message})`);
+  }
 }
 
 async function createGame() {
-  const code = makeCode();
-  const teamCount = Number($("#teamCount").value);
-  const order = QUESTIONS.map((_, index) => index);
-  if ($("#questionOrder").value === "shuffle") shuffle(order);
-  const teams = {};
-  TEAM_NAMES.slice(0, teamCount).forEach((name, index) => {
-    teams[`team${index + 1}`] = { name, score: 0, last: "Waiting" };
-  });
+  try {
+    setLobbyStatus("Creating game...");
+    const code = makeCode();
+    const teamCount = Number($("#teamCount").value);
+    const order = QUESTIONS.map((_, index) => index);
+    if ($("#questionOrder").value === "shuffle") shuffle(order);
+    const teams = {};
+    TEAM_NAMES.slice(0, teamCount).forEach((name, index) => {
+      teams[`team${index + 1}`] = { name, score: 0, last: "Waiting" };
+    });
 
-  await set(gameRef(code), {
-    createdAt: serverTimestamp(),
-    phase: "scene",
-    current: 0,
-    order,
-    questionStartedAt: 0,
-    teams,
-    submissions: {}
-  });
+    await set(gameRef(code), {
+      createdAt: serverTimestamp(),
+      phase: "scene",
+      current: 0,
+      order,
+      questionStartedAt: 0,
+      teams,
+      submissions: {}
+    });
 
-  state.gameCode = code;
-  $("#gameCodeLabel").textContent = code;
-  listenToGame(code, "host");
-  showView(hostView);
+    state.gameCode = code;
+    $("#gameCodeLabel").textContent = code;
+    listenToGame(code, "host");
+    setLobbyStatus("");
+    showView(hostView);
+  } catch (error) {
+    setLobbyStatus(`Could not create the game. ${error.message}`, "error");
+  }
 }
 
 async function joinGame() {
-  const code = $("#joinCodeInput").value.trim().toUpperCase();
-  const name = $("#teamNameInput").value.trim() || "Team";
-  if (!code) return;
-  const snap = await get(gameRef(code));
-  if (!snap.exists()) {
-    alert("Game code not found.");
-    return;
+  try {
+    setLobbyStatus("Joining game...");
+    const code = $("#joinCodeInput").value.trim().toUpperCase();
+    const name = $("#teamNameInput").value.trim() || "Team";
+    if (!code) {
+      setLobbyStatus("Enter the game code from the TV.", "error");
+      return;
+    }
+    const snap = await get(gameRef(code));
+    if (!snap.exists()) {
+      setLobbyStatus("Game code not found.", "error");
+      return;
+    }
+    const game = snap.val();
+    const openTeam = Object.entries(game.teams || {}).find(([, team]) => !team.deviceName || team.deviceName === name);
+    if (!openTeam) {
+      setLobbyStatus("No open team slots.", "error");
+      return;
+    }
+    state.gameCode = code;
+    state.teamId = openTeam[0];
+    state.teamName = name;
+    await update(ref(state.db, `games/${code}/teams/${state.teamId}`), { deviceName: name, last: "Joined" });
+    $("#teamGameCode").textContent = `Game ${code}`;
+    $("#teamTitle").textContent = name;
+    listenToGame(code, "team");
+    setLobbyStatus("");
+    showView(teamView);
+  } catch (error) {
+    setLobbyStatus(`Could not join the game. ${error.message}`, "error");
   }
-  const game = snap.val();
-  const openTeam = Object.entries(game.teams || {}).find(([, team]) => !team.deviceName || team.deviceName === name);
-  if (!openTeam) {
-    alert("No open team slots.");
-    return;
-  }
-  state.gameCode = code;
-  state.teamId = openTeam[0];
-  state.teamName = name;
-  await update(ref(state.db, `games/${code}/teams/${state.teamId}`), { deviceName: name, last: "Joined" });
-  $("#teamGameCode").textContent = `Game ${code}`;
-  $("#teamTitle").textContent = name;
-  listenToGame(code, "team");
-  showView(teamView);
 }
 
 function listenToGame(code, role) {
@@ -256,6 +326,18 @@ function shuffle(items) {
     const swapIndex = Math.floor(Math.random() * (index + 1));
     [items[index], items[swapIndex]] = [items[swapIndex], items[index]];
   }
+}
+
+function setConfigStatus(message, tone = "") {
+  configStatus.textContent = message;
+  configStatus.classList.toggle("ready", tone === "ready");
+  configStatus.classList.toggle("error", tone === "error");
+}
+
+function setLobbyStatus(message, tone = "") {
+  lobbyStatus.textContent = message;
+  lobbyStatus.classList.toggle("ready", tone === "ready");
+  lobbyStatus.classList.toggle("error", tone === "error");
 }
 
 function showView(view) {

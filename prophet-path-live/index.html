@@ -19,6 +19,7 @@
           <h2>Firebase Setup</h2>
           <p class="helper">Paste your Firebase web app config. The browser keeps it on this device for future games.</p>
           <textarea id="firebaseConfig" spellcheck="false" placeholder='{"apiKey":"...","authDomain":"...","databaseURL":"...","projectId":"...","appId":"..."}'></textarea>
+          <p id="configStatus" class="helper status" aria-live="polite"></p>
           <div class="config-actions">
             <button class="secondary" id="clearConfigButton" type="button">Clear</button>
             <button class="primary" type="submit">Use Config</button>
@@ -48,6 +49,7 @@
               <option value="shuffle">Shuffle</option>
             </select>
           </label>
+          <p id="lobbyStatus" class="helper status" aria-live="polite"></p>
           <button id="createGameButton" class="primary" type="button">Create Host Game</button>
         </div>
 
@@ -119,7 +121,7 @@
       </section>
     </main>
 
-    <script src="questions.js?v=live1"></script>
-    <script type="module" src="live.js?v=live1"></script>
+    <script src="questions.js?v=live2"></script>
+    <script type="module" src="live.js?v=live2"></script>
   </body>
 </html>

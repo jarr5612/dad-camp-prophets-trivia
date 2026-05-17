@@ -89,6 +89,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .panel h2 { margin: 0; font-size: 2rem; }
 .helper { margin: 0; color: #5f6b78; font-weight: 750; line-height: 1.4; }
 .helper.small { font-size: 0.9rem; }
+.status { min-height: 1.4em; color: var(--navy); }
+.status.ready { color: #28613c; }
+.status.error { color: #a33a2d; }
 
 textarea {
   width: 100%;

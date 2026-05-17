@@ -25,7 +25,10 @@ const teamView = $("#teamView");
 const configStatus = $("#configStatus");
 const lobbyStatus = $("#lobbyStatus");
 
-$("#configForm").addEventListener("submit", async (event) => {
+$("#configForm").addEventListener("submit", handleConfigSubmit);
+$("#useConfigButton").addEventListener("click", handleConfigSubmit);
+
+async function handleConfigSubmit(event) {
   event.preventDefault();
   const raw = $("#firebaseConfig").value.trim();
   try {
@@ -40,7 +43,7 @@ $("#configForm").addEventListener("submit", async (event) => {
   } catch (error) {
     setConfigStatus(error.message || "Firebase could not connect.", "error");
   }
-});
+}
 
 $("#clearConfigButton").addEventListener("click", () => {
   localStorage.removeItem("prophetPathFirebaseConfig");

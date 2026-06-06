@@ -12,13 +12,13 @@ const BOARD_SYMBOLS = selectOriginalItems(["ARK", "STARS", "COAT", "SEA", "CROWN
 const BOARD_GLYPHS = selectOriginalItems(["⛵", "★", "▤", "≈", "♛", "◒", "♨", "▱", "▥", "✕", "◎", "◁", "〰", "⌂", "↝", "△", "⛵", "✦", "⚖", "✧", "⬟", "▤", "▣", "♣", "▰", "▥", "⌂", "$", "◈", "●", "♥", "◎", "▤", "⌂", "✷", "♧", "⌂", "△", "☉", "♥"]);
 const TIMELINE_PROPHETS = QUESTIONS.map((question) => question.prophet);
 const BOARD_POINTS = Array.from({ length: QUESTIONS.length }, (_, index) => {
-  const row = Math.floor(index / 5);
-  const column = index % 5;
-  const x = row % 2 === 0 ? 10 + column * 20 : 90 - column * 20;
-  const y = 14 + row * 23 + (column % 2 === 0 ? 0 : 4);
+  const row = Math.floor(index / 6);
+  const column = index % 6;
+  const x = row % 2 === 0 ? 8 + column * 16.8 : 92 - column * 16.8;
+  const y = 14 + row * 26 + (column % 2 === 0 ? 0 : 3);
   return { x, y };
 });
-const QUESTION_SECONDS = 20;
+const QUESTION_SECONDS = 60;
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDu1iuT56XTyXH3OkORC9JdzuV8oGpz2jI",
   authDomain: "dad-camp-game.firebaseapp.com",
@@ -91,6 +91,7 @@ $("#endGameButton").addEventListener("click", endGame);
 $("#musicButton").addEventListener("click", toggleMusic);
 $("#timelineTrack").addEventListener("click", handleTimelineClick);
 $("#backToBoardButton").addEventListener("click", showBoardView);
+$("#closeCelebrationButton").addEventListener("click", closeCelebration);
 
 startWithEmbeddedConfig();
 
@@ -248,12 +249,18 @@ function listenToGame(code, role) {
 async function askQuestion() {
   startMusic();
   const startedAt = Date.now();
-  await update(gameRef(state.gameCode), {
+  const updates = {
     phase: "question",
     questionStartedAt: startedAt,
     questionEndsAt: startedAt + QUESTION_SECONDS * 1000,
     submissions: {}
+  };
+  Object.keys(state.game.teams || {}).forEach((teamId) => {
+    updates[`teams/${teamId}/last`] = "Waiting";
+    updates[`teams/${teamId}/lastResult`] = "";
+    updates[`teams/${teamId}/lastPoints`] = 0;
   });
+  await update(gameRef(state.gameCode), updates);
 }
 
 async function revealAnswer() {
@@ -270,6 +277,8 @@ async function revealAnswer() {
     const points = correct ? calculatePoints(submission.elapsedMs) : 0;
     updates[`teams/${teamId}/score`] = (team.score || 0) + points;
     updates[`teams/${teamId}/last`] = correct ? `+${points}` : submission ? (onTime ? "Wrong" : "Too late") : "No answer";
+    updates[`teams/${teamId}/lastResult`] = correct ? "correct" : submission ? "wrong" : "no-answer";
+    updates[`teams/${teamId}/lastPoints`] = points;
   });
   await update(gameRef(state.gameCode), updates);
   state.autoRevealing = false;
@@ -289,6 +298,7 @@ async function nextQuestion() {
 
 async function jumpToTimelineStop(position) {
   if (!state.gameCode || !state.game) return;
+  if (!canOpenStop(position, state.game)) return;
   try {
     state.boardFocused = true;
     await update(gameRef(state.gameCode), {
@@ -304,11 +314,8 @@ async function jumpToTimelineStop(position) {
 }
 
 async function endGame() {
-  if (confirm("End this live game?")) {
-    stopMusic();
-    await remove(gameRef(state.gameCode));
-    showView(lobbyView);
-  }
+  stopMusic();
+  renderCelebration();
 }
 
 async function submitAnswer(answer) {
@@ -380,10 +387,42 @@ function getHostQuestionText(game, question) {
 }
 
 function renderHostTeams(game) {
-  $("#hostTeams").innerHTML = Object.entries(game.teams || {}).map(([teamId, team]) => {
+  const rankedTeams = getRankedTeams(game);
+  $("#hostTeams").innerHTML = rankedTeams.map(([teamId, team], index) => {
     const submission = game.submissions?.[teamId];
-    return `<div class="team-row"><span>${team.deviceName || team.name}</span><strong>${team.score || 0}</strong><small>${submission ? "Answer in " + (submission.elapsedMs / 1000).toFixed(1) + "s" : team.last || "Waiting"}</small></div>`;
+    const resultClass = game.phase === "answer" ? (team.lastResult || "wrong") : submission ? "answered" : "";
+    const rankClass = index === 0 ? "rank-gold" : index === 1 ? "rank-silver" : index === 2 ? "rank-bronze" : "";
+    const status = submission ? `Answer in ${(submission.elapsedMs / 1000).toFixed(1)}s` : team.last || "Waiting";
+    return `<div class="team-row ${rankClass} ${resultClass}">
+      <span><b>${index + 1}</b>${team.deviceName || team.name}</span>
+      <strong>${team.score || 0}</strong>
+      <small>${status}</small>
+    </div>`;
   }).join("");
+}
+
+function getRankedTeams(game) {
+  return Object.entries(game.teams || {}).sort(([, first], [, second]) => (second.score || 0) - (first.score || 0));
+}
+
+function renderCelebration() {
+  const rankedTeams = getRankedTeams(state.game || {});
+  $("#finalLeaderboard").innerHTML = rankedTeams.map(([, team], index) => {
+    const medal = index === 0 ? "1" : index === 1 ? "2" : index === 2 ? "3" : String(index + 1);
+    const rankClass = index === 0 ? "rank-gold" : index === 1 ? "rank-silver" : index === 2 ? "rank-bronze" : "";
+    return `<div class="final-row ${rankClass}">
+      <span>${medal}</span>
+      <b>${team.deviceName || team.name}</b>
+      <strong>${team.score || 0}</strong>
+    </div>`;
+  }).join("");
+  $("#celebrationView").classList.remove("hidden");
+}
+
+async function closeCelebration() {
+  $("#celebrationView").classList.add("hidden");
+  if (state.gameCode) await remove(gameRef(state.gameCode));
+  showView(lobbyView);
 }
 
 function renderTimeline(game) {
@@ -399,16 +438,24 @@ function renderTimeline(game) {
     const question = QUESTIONS[questionIndex];
     const point = BOARD_POINTS[position] || BOARD_POINTS[BOARD_POINTS.length - 1];
     const completed = game.completed?.[position];
+    const disabled = !canOpenStop(position, game);
     const status = `${completed ? "locked" : ""} ${position === current ? "active" : ""}`;
     const glyph = BOARD_GLYPHS[questionIndex] || "◆";
     const lockedMark = completed ? `<i class="lock-mark" aria-hidden="true">✓</i>` : "";
-    return `<button class="timeline-stop ${status}" type="button" data-position="${position}" style="--x: ${point.x}%; --y: ${point.y}%;" aria-label="Open stop ${position + 1}">
+    return `<button class="timeline-stop ${status}" type="button" data-position="${position}" style="--x: ${point.x}%; --y: ${point.y}%;" aria-label="Open stop ${position + 1}" ${disabled ? "disabled" : ""}>
       <b class="symbol-icon" aria-hidden="true">${glyph}</b>
       <span>${position + 1}</span>
       ${lockedMark}
     </button>`;
   }).join("");
   $("#timelineTrack").innerHTML = boardPath + boardStops;
+}
+
+function canOpenStop(position, game) {
+  if (position === 0) return true;
+  if (game.completed?.[position]) return true;
+  if (position === game.current) return true;
+  return Boolean(game.completed?.[position - 1]);
 }
 
 function drawBoardIcon(symbol) {
@@ -683,7 +730,25 @@ function drawScene(type, index) {
   const feature = {
     ark: `<path d="M460 300 C650 360 900 360 1130 300 L1060 410 H530 Z" fill="#7a4b26"/><path d="M610 195 H930 L985 300 H555 Z" fill="#8b5a2d"/><rect x="735" y="115" width="120" height="86" fill="#6a4224"/>`,
     sea: `<path d="M0 560 C240 480 420 590 620 510 L590 900 H0 Z" fill="#397b94"/><path d="M1600 540 C1340 465 1190 600 980 505 L1030 900 H1600 Z" fill="#397b94"/><path d="M790 260 C760 365 758 455 790 575" stroke="#5b3b20" stroke-width="16" stroke-linecap="round"/>`,
-    stars: Array.from({length: 22}, (_, i) => `<circle cx="${220 + (i * 59) % 1120}" cy="${90 + (i * 79) % 250}" r="${4 + i % 5}" fill="#fff2b8"/>`).join("") + `<circle cx="800" cy="505" r="42" fill="#6f4a28"/><path d="M800 550 L735 710 H865 Z" fill="#d6c6aa"/>`
+    stars: Array.from({length: 22}, (_, i) => `<circle cx="${220 + (i * 59) % 1120}" cy="${90 + (i * 79) % 250}" r="${4 + i % 5}" fill="#fff2b8"/>`).join("") + `<circle cx="800" cy="505" r="42" fill="#6f4a28"/><path d="M800 550 L735 710 H865 Z" fill="#d6c6aa"/>`,
+    grain: `<path d="M700 250 C610 320 635 455 800 510 C965 455 990 320 900 250 Z" fill="#7b4b2a"/><path d="M650 250 C770 335 830 335 950 250" fill="none" stroke="#d7a34a" stroke-width="18"/><rect x="580" y="520" width="440" height="84" rx="10" fill="#8b5a2d"/>`,
+    scroll: `<path d="M530 210 H1020 C930 270 930 520 1020 585 H530 C610 520 610 270 530 210 Z" fill="#e4cf9d"/><path d="M645 320 H910 M645 395 H900 M645 470 H845" stroke="#6d4c2e" stroke-width="18" stroke-linecap="round"/>`,
+    lions: `<circle cx="800" cy="360" r="150" fill="#b9813d"/><circle cx="800" cy="360" r="88" fill="#d2a35a"/><path d="M730 340 H870 M745 420 C790 455 835 455 875 420" stroke="#4a2c17" stroke-width="18" fill="none" stroke-linecap="round"/><path d="M585 555 H1015 L945 665 H655 Z" fill="#3d2a21"/>`,
+    fish: `<path d="M420 390 C610 175 945 175 1160 390 C945 610 610 610 420 390 Z" fill="#477f8e"/><path d="M1160 390 L1330 285 V495 Z" fill="#356b7b"/><circle cx="620" cy="350" r="22" fill="#172436"/>`,
+    sling: `<path d="M675 170 C570 370 650 515 800 690 C950 515 1030 370 925 170" fill="none" stroke="#604124" stroke-width="22" stroke-linecap="round"/><circle cx="800" cy="690" r="44" fill="#67513c"/><circle cx="1020" cy="315" r="74" fill="#7b634b"/>`,
+    river: `<path d="M0 610 C260 520 465 665 720 570 C1010 460 1240 625 1600 500 L1600 900 L0 900 Z" fill="#3f8ca4"/><circle cx="800" cy="430" r="42" fill="#6f4a28"/><path d="M800 475 L745 625 H855 Z" fill="#c2b08d"/>`,
+    journey: `<path d="M430 600 C575 410 760 465 860 330 C960 195 1120 250 1210 170" fill="none" stroke="#d0a060" stroke-width="48" stroke-linecap="round"/><path d="M650 430 L760 250 L870 430 Z" fill="#9a6b42"/><path d="M705 430 V520 M815 430 V520" stroke="#5b3b20" stroke-width="14"/>`,
+    ship: `<path d="M395 500 C560 610 1040 610 1205 500 L1115 640 H485 Z" fill="#79502d"/><path d="M800 165 V500" stroke="#5b3b20" stroke-width="18"/><path d="M800 190 L1070 430 H800 Z" fill="#d8c8a8"/><path d="M800 235 L560 455 H800 Z" fill="#efe1be"/>`,
+    records: `<rect x="560" y="235" width="420" height="330" rx="18" fill="#bfa36e"/><path d="M645 330 H910 M645 405 H900 M645 480 H840" stroke="#5b3b20" stroke-width="18" stroke-linecap="round"/>`,
+    warriors: `<path d="M430 575 H1170" stroke="#384b4d" stroke-width="22"/><path d="M540 560 L600 300 L660 560 Z M760 560 L820 300 L880 560 Z M980 560 L1040 300 L1100 560 Z" fill="#54745f"/><path d="M600 300 L675 220 M820 300 L895 220 M1040 300 L1115 220" stroke="#2d3d3e" stroke-width="14"/>`,
+    grove: `<path d="M520 680 V330 M1030 680 V315" stroke="#5b3b20" stroke-width="38"/><circle cx="520" cy="260" r="135" fill="#406d50"/><circle cx="1030" cy="245" r="145" fill="#4d7956"/><path d="M710 175 C760 120 845 120 900 175 C840 205 770 205 710 175 Z" fill="#fff6ce" opacity="0.85"/>`,
+    wagons: `<path d="M520 490 H910 L850 340 H595 Z" fill="#9d7148"/><circle cx="610" cy="535" r="55" fill="#4a3525"/><circle cx="820" cy="535" r="55" fill="#4a3525"/><path d="M910 485 H1110" stroke="#5b3b20" stroke-width="18"/>`,
+    jail: `<rect x="560" y="225" width="480" height="400" fill="#77695f"/><path d="M640 225 V625 M735 225 V625 M830 225 V625 M925 225 V625" stroke="#1f2933" stroke-width="22"/><rect x="560" y="225" width="480" height="400" fill="none" stroke="#1f2933" stroke-width="24"/>`,
+    light: `<circle cx="800" cy="295" r="115" fill="#fff0a6"/><path d="M710 475 H890 M735 555 H865 M800 80 V160 M560 295 H655 M945 295 H1040" stroke="#7b5a28" stroke-width="18" stroke-linecap="round"/>`,
+    agriculture: `<path d="M500 630 C620 440 715 355 790 170 C880 355 965 440 1100 630" stroke="#c89639" stroke-width="24" fill="none"/><path d="M790 170 V690" stroke="#6a4a27" stroke-width="16"/><path d="M600 520 H1000" stroke="#c89639" stroke-width="20"/>`,
+    manyTemples: `<path d="M280 650 V455 H455 V650 M565 650 V350 H760 V650 M880 650 V420 H1065 V650 M1195 650 V500 H1340 V650" fill="#d8d6c8"/><path d="M368 340 V455 M662 220 V350 M972 300 V420 M1267 390 V500" stroke="#f4e7b5" stroke-width="16"/>`,
+    visits: `<circle cx="760" cy="310" r="72" fill="#6f4a28"/><path d="M620 610 C640 470 710 410 760 410 C830 410 895 470 915 610 Z" fill="#d6c6aa"/><path d="M980 335 H1190 M1085 230 V440" stroke="#f2e5ad" stroke-width="28" stroke-linecap="round"/>`,
+    heart: `<path d="M800 625 C520 425 540 190 735 255 C775 270 800 325 800 325 C800 325 825 270 865 255 C1060 190 1080 425 800 625 Z" fill="#b64a3d"/>`
   }[type] || `<rect x="690" y="290" width="220" height="180" rx="12" fill="#b99a68"/><path d="M650 290 L800 170 L950 290 Z" fill="#8d6a43"/>`;
 
   return `<svg viewBox="0 0 1600 900" aria-label="Visual clue scene"><defs><linearGradient id="skyLive${index}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#8fb9c8"/><stop offset="1" stop-color="#d7c9a7"/></linearGradient></defs><rect width="1600" height="900" fill="url(#skyLive${index})"/><circle cx="1305" cy="132" r="58" fill="#d9b55c"/><path d="M0 330 C250 220 520 340 760 235 C1010 125 1240 290 1600 190 L1600 900 L0 900 Z" fill="#496f61"/><path d="M0 495 C270 415 470 515 730 430 C1020 335 1250 495 1600 395 L1600 900 L0 900 Z" fill="#6f8f59"/><path d="M-80 900 C320 730 520 700 830 760 C1120 815 1320 680 1680 590" fill="none" stroke="#d0a060" stroke-width="58" stroke-linecap="round"/>${feature}</svg>`;

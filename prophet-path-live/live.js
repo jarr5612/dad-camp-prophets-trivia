@@ -360,10 +360,17 @@ function renderStopFocus(question, questionIndex, position, phase) {
   const answerText = question.choices[question.answer];
   $("#stopFocus").classList.toggle("hidden", !shouldShowFocus);
   $("#timelineTrack").classList.toggle("dimmed", shouldShowFocus);
-  $("#focusArt").innerHTML = drawVisualScene(questionIndex);
+  renderFocusVisual(questionIndex);
   $("#focusStopLabel").textContent = `Stop ${position + 1} of ${state.game.order.length}`;
   $("#focusProphetName").textContent = phase === "answer" ? `Answer: ${answerText}` : "";
   $("#focusQuestionText").textContent = phase === "scene" ? "" : question.question;
+}
+
+function renderFocusVisual(questionIndex) {
+  const source = VISUAL_ASSETS[questionIndex];
+  const currentImage = $("#focusArt img");
+  if (currentImage?.getAttribute("src") === source) return;
+  $("#focusArt").innerHTML = `<img class="visual-scene-image" src="${source}" alt="Visual clue for stop ${questionIndex + 1}" />`;
 }
 
 function showBoardView() {

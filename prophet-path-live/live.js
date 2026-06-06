@@ -441,9 +441,10 @@ function renderTimeline(game) {
     const completed = game.completed?.[position];
     const disabled = !canOpenStop(position, game);
     const status = `${completed ? "locked" : ""} ${position === current ? "active" : ""}`;
+    const glyph = BOARD_GLYPHS[questionIndex] || "◆";
     const lockedMark = completed ? `<i class="lock-mark" aria-hidden="true">✓</i>` : "";
     return `<button class="timeline-stop ${status}" type="button" data-position="${position}" style="--x: ${point.x}%; --y: ${point.y}%;" aria-label="Open stop ${position + 1}" ${disabled ? "disabled" : ""}>
-      <b class="symbol-icon" aria-hidden="true"><img src="${VISUAL_ASSETS[questionIndex]}" alt="" /></b>
+      <b class="symbol-icon" aria-hidden="true">${glyph}</b>
       <span>${position + 1}</span>
       ${lockedMark}
     </button>`;

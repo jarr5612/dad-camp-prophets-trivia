@@ -11,7 +11,7 @@ const SCENES = selectOriginalItems(["ark", "sea", "stars", "grain", "scroll", "l
 const BOARD_SYMBOLS = selectOriginalItems(["ARK", "STARS", "COAT", "SEA", "CROWN", "SLING", "FIRE", "SCROLL", "CITY", "BONES", "LIONS", "FISH", "RIVER", "GATE", "ROAD", "TENT", "SHIP", "PRAYER", "COURT", "ANGEL", "SHIELD", "RECORD", "PLATES", "GROVE", "WAGON", "JAIL", "TEMPLE", "COIN", "SPIRIT", "BALL", "HELP", "GLOBE", "BOOKS", "STORE", "LIGHT", "WHEAT", "TEMPLE", "SPIRES", "VISIT", "HEART"]);
 const BOARD_GLYPHS = selectOriginalItems(["⛵", "★", "▤", "≈", "♛", "◒", "♨", "▱", "▥", "✕", "◎", "◁", "〰", "⌂", "↝", "△", "⛵", "✦", "⚖", "✧", "⬟", "▤", "▣", "♣", "▰", "▥", "⌂", "$", "◈", "●", "♥", "◎", "▤", "⌂", "✷", "♧", "⌂", "△", "☉", "♥"]);
 const TIMELINE_PROPHETS = QUESTIONS.map((question) => question.prophet);
-const VISUAL_ASSETS = QUESTIONS.map((_, index) => `assets/visuals/stop-${String(index + 1).padStart(2, "0")}.jpg`);
+const VISUAL_ASSETS = QUESTIONS.map((_, index) => `assets/visuals/stop-${String(index + 1).padStart(2, "0")}.png`);
 const BOARD_POINTS = Array.from({ length: QUESTIONS.length }, (_, index) => {
   const row = Math.floor(index / 6);
   const column = index % 6;

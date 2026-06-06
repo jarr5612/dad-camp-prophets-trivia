@@ -1,18 +1,21 @@
 import { deleteApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getDatabase, ref, set, update, onValue, get, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
 
-const QUESTIONS = window.PROPHET_PATH_QUESTIONS;
+const SOURCE_QUESTIONS = window.PROPHET_PATH_QUESTIONS;
+const SELECTED_QUESTION_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 13, 16, 17, 19, 23, 24, 25, 26, 35, 36, 38, 39, 40];
+const SELECTED_INDEXES = SELECTED_QUESTION_NUMBERS.map((number) => number - 1);
+const QUESTIONS = SELECTED_INDEXES.map((index) => SOURCE_QUESTIONS[index]);
 const LETTERS = ["A", "B", "C", "D"];
 const TEAM_NAMES = ["Blue Team", "Gold Team", "Green Team", "Red Team"];
-const SCENES = ["ark", "sea", "stars", "grain", "scroll", "lions", "fish", "sling", "fire", "crowns", "city", "bones", "river", "gate", "letters", "journey", "ship", "angel", "records", "plates", "prayer", "court", "warriors", "grove", "wagons", "jail", "temple", "tithing", "spirit", "baseball", "relief", "globe", "books", "welfare", "light", "agriculture", "templeSymbol", "manyTemples", "visits", "heart"];
-const BOARD_SYMBOLS = ["ARK", "STARS", "COAT", "SEA", "CROWN", "SLING", "FIRE", "SCROLL", "CITY", "BONES", "LIONS", "FISH", "RIVER", "GATE", "ROAD", "TENT", "SHIP", "PRAYER", "COURT", "ANGEL", "SHIELD", "RECORD", "PLATES", "GROVE", "WAGON", "JAIL", "TEMPLE", "COIN", "SPIRIT", "BALL", "HELP", "GLOBE", "BOOKS", "STORE", "LIGHT", "WHEAT", "TEMPLE", "SPIRES", "VISIT", "HEART"];
-const BOARD_GLYPHS = ["⛵", "★", "▤", "≈", "♛", "◒", "♨", "▱", "▥", "✕", "◎", "◁", "〰", "⌂", "↝", "△", "⛵", "✦", "⚖", "✧", "⬟", "▤", "▣", "♣", "▰", "▥", "⌂", "$", "◈", "●", "♥", "◎", "▤", "⌂", "✷", "♧", "⌂", "△", "☉", "♥"];
-const TIMELINE_PROPHETS = ["NOAH", "ABRAHAM", "JOSEPH (Old Testament)", "MOSES", "SAMUEL", "DAVID", "ELIJAH", "ISAIAH", "JEREMIAH", "EZEKIEL", "DANIEL", "JONAH", "JOHN THE BAPTIST", "PETER", "PAUL", "LEHI", "NEPHI", "ENOS", "ABINADI", "ALMA THE YOUNGER", "HELAMAN", "MORMON", "MORONI", "JOSEPH SMITH", "BRIGHAM YOUNG", "JOHN TAYLOR", "WILFORD WOODRUFF", "LORENZO SNOW", "JOSEPH F. SMITH", "HEBER J. GRANT", "GEORGE ALBERT SMITH", "DAVID O. McKAY", "JOSEPH FIELDING SMITH", "HAROLD B. LEE", "SPENCER W. KIMBALL", "EZRA TAFT BENSON", "HOWARD W. HUNTER", "GORDON B. HINCKLEY", "THOMAS S. MONSON", "RUSSELL M. NELSON"];
-const BOARD_POINTS = Array.from({ length: 40 }, (_, index) => {
-  const row = Math.floor(index / 8);
-  const column = index % 8;
-  const x = row % 2 === 0 ? 7 + column * 12.2 : 92 - column * 12.2;
-  const y = 12 + row * 18.4 + (column % 2 === 0 ? 0 : 3.8);
+const SCENES = selectOriginalItems(["ark", "sea", "stars", "grain", "scroll", "lions", "fish", "sling", "fire", "crowns", "city", "bones", "river", "gate", "letters", "journey", "ship", "angel", "records", "plates", "prayer", "court", "warriors", "grove", "wagons", "jail", "temple", "tithing", "spirit", "baseball", "relief", "globe", "books", "welfare", "light", "agriculture", "templeSymbol", "manyTemples", "visits", "heart"]);
+const BOARD_SYMBOLS = selectOriginalItems(["ARK", "STARS", "COAT", "SEA", "CROWN", "SLING", "FIRE", "SCROLL", "CITY", "BONES", "LIONS", "FISH", "RIVER", "GATE", "ROAD", "TENT", "SHIP", "PRAYER", "COURT", "ANGEL", "SHIELD", "RECORD", "PLATES", "GROVE", "WAGON", "JAIL", "TEMPLE", "COIN", "SPIRIT", "BALL", "HELP", "GLOBE", "BOOKS", "STORE", "LIGHT", "WHEAT", "TEMPLE", "SPIRES", "VISIT", "HEART"]);
+const BOARD_GLYPHS = selectOriginalItems(["⛵", "★", "▤", "≈", "♛", "◒", "♨", "▱", "▥", "✕", "◎", "◁", "〰", "⌂", "↝", "△", "⛵", "✦", "⚖", "✧", "⬟", "▤", "▣", "♣", "▰", "▥", "⌂", "$", "◈", "●", "♥", "◎", "▤", "⌂", "✷", "♧", "⌂", "△", "☉", "♥"]);
+const TIMELINE_PROPHETS = QUESTIONS.map((question) => question.prophet);
+const BOARD_POINTS = Array.from({ length: QUESTIONS.length }, (_, index) => {
+  const row = Math.floor(index / 5);
+  const column = index % 5;
+  const x = row % 2 === 0 ? 10 + column * 20 : 90 - column * 20;
+  const y = 14 + row * 23 + (column % 2 === 0 ? 0 : 4);
   return { x, y };
 });
 const QUESTION_SECONDS = 20;
@@ -143,6 +146,10 @@ function validateFirebaseConfig(config) {
 
 function hasDifferentFirebaseConfig(current, next) {
   return ["apiKey", "authDomain", "databaseURL", "projectId", "appId"].some((key) => current[key] !== next[key]);
+}
+
+function selectOriginalItems(items) {
+  return SELECTED_INDEXES.map((index) => items[index]);
 }
 
 async function testDatabaseConnection() {

@@ -148,10 +148,12 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 }
 
 .host-view {
-  min-height: calc(100vh - 36px);
+  height: calc(100vh - 36px);
+  min-height: 620px;
   display: grid;
-  grid-template-rows: auto minmax(390px, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 12px;
+  overflow: hidden;
 }
 
 .hud {
@@ -180,7 +182,7 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 
 .host-grid {
   display: grid;
-  grid-template-columns: 1fr 330px;
+  grid-template-columns: minmax(0, 1fr) 330px;
   gap: 12px;
   min-height: 0;
 }
@@ -189,21 +191,23 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
   position: relative;
   overflow: hidden;
   background: #6f8f59;
+  min-height: 0;
 }
 
 .scene-art, .scene-art svg {
   width: 100%;
   height: 100%;
-  min-height: 390px;
+  min-height: 0;
   display: block;
 }
 
 .visual-scene-image {
   width: 100%;
   height: 100%;
-  min-height: 390px;
+  min-height: 0;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
+  background: #10283f;
 }
 
 .scene-art.zoom-in svg {
@@ -463,22 +467,26 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 }
 
 .focus-art {
+  min-width: 0;
   min-height: 100%;
   overflow: hidden;
   border-radius: 8px;
-  background: #6f8f59;
+  background: #10283f;
 }
 
 .focus-art svg {
   width: 100%;
   height: 100%;
-  min-height: 330px;
+  min-height: 0;
   display: block;
   animation: focusSceneZoom 0.6s ease-out both;
 }
 
 .focus-art .visual-scene-image {
-  min-height: 330px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
   animation: focusSceneZoom 0.6s ease-out both;
 }
 
@@ -516,6 +524,8 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 .score-panel {
   padding: 16px;
   background: var(--paper);
+  min-height: 0;
+  overflow: auto;
 }
 
 .score-panel h3 { margin: 0 0 12px; color: var(--navy); font-size: 1.5rem; }

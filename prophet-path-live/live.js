@@ -410,7 +410,7 @@ function renderCelebration() {
   $("#finalLeaderboard").innerHTML = rankedTeams.map(([, team], index) => {
     const medal = index === 0 ? "1" : index === 1 ? "2" : index === 2 ? "3" : String(index + 1);
     const rankClass = index === 0 ? "rank-gold" : index === 1 ? "rank-silver" : index === 2 ? "rank-bronze" : "";
-    return `<div class="final-row ${rankClass}">
+    return `<div class="final-row podium-place ${rankClass}">
       <span>${medal}</span>
       <b>${team.deviceName || team.name}</b>
       <strong>${team.score || 0}</strong>

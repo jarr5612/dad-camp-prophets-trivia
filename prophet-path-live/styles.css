@@ -659,19 +659,25 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 }
 
 .final-leaderboard {
-  display: grid;
-  gap: 10px;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 12px;
+  min-height: 260px;
 }
 
 .final-row {
   display: grid;
-  grid-template-columns: 56px 1fr auto;
+  grid-template-columns: 1fr;
   align-items: center;
-  gap: 14px;
-  padding: 14px;
+  justify-items: center;
+  gap: 10px;
+  width: min(210px, 26vw);
+  padding: 18px 14px;
   border: 1px solid rgba(255,255,255,0.32);
   border-radius: 8px;
   background: rgba(255,255,255,0.12);
+  text-align: center;
 }
 
 .final-row span {
@@ -688,9 +694,16 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
 
 .final-row b { font-size: 1.35rem; }
 .final-row strong { font-size: 2rem; }
+.final-row.rank-gold { min-height: 245px; order: 2; }
+.final-row.rank-silver { min-height: 200px; order: 1; }
+.final-row.rank-bronze { min-height: 165px; order: 3; }
 .final-row.rank-gold span { background: #ffd66b; }
 .final-row.rank-silver span { background: #d9e0e7; }
 .final-row.rank-bronze span { background: #d69b62; }
+.final-row:not(.rank-gold):not(.rank-silver):not(.rank-bronze) {
+  min-height: 130px;
+  order: 4;
+}
 
 .answer {
   min-height: 54px;

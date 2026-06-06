@@ -201,6 +201,50 @@ label { display: grid; gap: 8px; color: var(--navy); font-weight: 900; }
   display: block;
 }
 
+.board-backdrop {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, #7391a2 0%, #d2c18e 54%, #496f4f 100%);
+}
+
+.backdrop-sky,
+.backdrop-ridge,
+.backdrop-ground {
+  position: absolute;
+  inset: 0;
+}
+
+.backdrop-sky {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 229, 160, 0.86) 0 7%, transparent 8%),
+    linear-gradient(180deg, rgba(156, 190, 205, 0.9), rgba(242, 211, 151, 0.48) 58%, transparent 59%);
+}
+
+.backdrop-ridge {
+  clip-path: polygon(0 62%, 12% 48%, 23% 57%, 37% 36%, 51% 56%, 64% 43%, 78% 59%, 91% 45%, 100% 57%, 100% 100%, 0 100%);
+}
+
+.ridge-far {
+  top: 6%;
+  background: linear-gradient(180deg, rgba(50, 80, 91, 0.76), rgba(76, 101, 80, 0.74));
+}
+
+.ridge-near {
+  top: 18%;
+  clip-path: polygon(0 64%, 10% 56%, 22% 65%, 35% 51%, 48% 66%, 59% 55%, 74% 68%, 87% 54%, 100% 64%, 100% 100%, 0 100%);
+  background: linear-gradient(180deg, rgba(76, 92, 58, 0.82), rgba(64, 111, 76, 0.92));
+}
+
+.backdrop-ground {
+  top: 58%;
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(251, 246, 234, 0.34) 0 12%, transparent 34%),
+    linear-gradient(160deg, rgba(116, 89, 47, 0.8), rgba(51, 103, 70, 0.92));
+}
+
 .visual-scene-image {
   width: 100%;
   height: 100%;

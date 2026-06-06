@@ -344,7 +344,7 @@ function renderHost() {
   $("#hostPartLabel").textContent = question.part;
   $("#hostPhaseLabel").textContent = game.phase === "scene" ? "Scene" : game.phase === "question" ? "Answering" : "Answer revealed";
   $("#hostQuestionText").textContent = getHostQuestionText(game, question);
-  $("#sceneArt").innerHTML = drawVisualScene(qIndex);
+  $("#sceneArt").innerHTML = drawBoardBackdrop();
   renderStopFocus(question, qIndex, game.current || 0, game.phase);
   animateSceneIfNeeded(qIndex);
   $("#askQuestionButton").disabled = game.phase !== "scene";
@@ -455,6 +455,15 @@ function renderTimeline(game) {
 function drawVisualScene(questionIndex) {
   const question = QUESTIONS[questionIndex];
   return `<img class="visual-scene-image" src="${VISUAL_ASSETS[questionIndex]}" alt="Visual clue for stop ${questionIndex + 1}" />`;
+}
+
+function drawBoardBackdrop() {
+  return `<div class="board-backdrop" aria-hidden="true">
+    <div class="backdrop-sky"></div>
+    <div class="backdrop-ridge ridge-far"></div>
+    <div class="backdrop-ridge ridge-near"></div>
+    <div class="backdrop-ground"></div>
+  </div>`;
 }
 
 function canOpenStop(position, game) {

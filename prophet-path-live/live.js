@@ -286,7 +286,7 @@ async function revealAnswer() {
 
 async function nextQuestion() {
   const next = Math.min((state.game.current || 0) + 1, state.game.order.length - 1);
-  state.boardFocused = false;
+  state.boardFocused = true;
   await update(gameRef(state.gameCode), {
     current: next,
     phase: "scene",

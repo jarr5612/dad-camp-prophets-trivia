@@ -11,6 +11,7 @@ const SCENES = selectOriginalItems(["ark", "sea", "stars", "grain", "scroll", "l
 const BOARD_SYMBOLS = selectOriginalItems(["ARK", "STARS", "COAT", "SEA", "CROWN", "SLING", "FIRE", "SCROLL", "CITY", "BONES", "LIONS", "FISH", "RIVER", "GATE", "ROAD", "TENT", "SHIP", "PRAYER", "COURT", "ANGEL", "SHIELD", "RECORD", "PLATES", "GROVE", "WAGON", "JAIL", "TEMPLE", "COIN", "SPIRIT", "BALL", "HELP", "GLOBE", "BOOKS", "STORE", "LIGHT", "WHEAT", "TEMPLE", "SPIRES", "VISIT", "HEART"]);
 const BOARD_GLYPHS = selectOriginalItems(["⛵", "★", "▤", "≈", "♛", "◒", "♨", "▱", "▥", "✕", "◎", "◁", "〰", "⌂", "↝", "△", "⛵", "✦", "⚖", "✧", "⬟", "▤", "▣", "♣", "▰", "▥", "⌂", "$", "◈", "●", "♥", "◎", "▤", "⌂", "✷", "♧", "⌂", "△", "☉", "♥"]);
 const TIMELINE_PROPHETS = QUESTIONS.map((question) => question.prophet);
+const VISUAL_ASSETS = QUESTIONS.map((_, index) => `assets/visuals/stop-${String(index + 1).padStart(2, "0")}.jpg`);
 const BOARD_POINTS = Array.from({ length: QUESTIONS.length }, (_, index) => {
   const row = Math.floor(index / 6);
   const column = index % 6;
@@ -343,7 +344,7 @@ function renderHost() {
   $("#hostPartLabel").textContent = question.part;
   $("#hostPhaseLabel").textContent = game.phase === "scene" ? "Scene" : game.phase === "question" ? "Answering" : "Answer revealed";
   $("#hostQuestionText").textContent = getHostQuestionText(game, question);
-  $("#sceneArt").innerHTML = drawScene(SCENES[qIndex], qIndex);
+  $("#sceneArt").innerHTML = drawVisualScene(qIndex);
   renderStopFocus(question, qIndex, game.current || 0, game.phase);
   animateSceneIfNeeded(qIndex);
   $("#askQuestionButton").disabled = game.phase !== "scene";
@@ -359,7 +360,7 @@ function renderStopFocus(question, questionIndex, position, phase) {
   const answerText = question.choices[question.answer];
   $("#stopFocus").classList.toggle("hidden", !shouldShowFocus);
   $("#timelineTrack").classList.toggle("dimmed", shouldShowFocus);
-  $("#focusArt").innerHTML = drawScene(SCENES[questionIndex], questionIndex);
+  $("#focusArt").innerHTML = drawVisualScene(questionIndex);
   $("#focusStopLabel").textContent = `Stop ${position + 1} of ${state.game.order.length}`;
   $("#focusProphetName").textContent = phase === "answer" ? `Answer: ${answerText}` : "";
   $("#focusQuestionText").textContent = phase === "scene" ? "" : question.question;
@@ -440,15 +441,19 @@ function renderTimeline(game) {
     const completed = game.completed?.[position];
     const disabled = !canOpenStop(position, game);
     const status = `${completed ? "locked" : ""} ${position === current ? "active" : ""}`;
-    const glyph = BOARD_GLYPHS[questionIndex] || "◆";
     const lockedMark = completed ? `<i class="lock-mark" aria-hidden="true">✓</i>` : "";
     return `<button class="timeline-stop ${status}" type="button" data-position="${position}" style="--x: ${point.x}%; --y: ${point.y}%;" aria-label="Open stop ${position + 1}" ${disabled ? "disabled" : ""}>
-      <b class="symbol-icon" aria-hidden="true">${glyph}</b>
+      <b class="symbol-icon" aria-hidden="true"><img src="${VISUAL_ASSETS[questionIndex]}" alt="" /></b>
       <span>${position + 1}</span>
       ${lockedMark}
     </button>`;
   }).join("");
   $("#timelineTrack").innerHTML = boardPath + boardStops;
+}
+
+function drawVisualScene(questionIndex) {
+  const question = QUESTIONS[questionIndex];
+  return `<img class="visual-scene-image" src="${VISUAL_ASSETS[questionIndex]}" alt="Visual clue for stop ${questionIndex + 1}" />`;
 }
 
 function canOpenStop(position, game) {
